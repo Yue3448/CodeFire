@@ -138,6 +138,26 @@
       "icon": "✎"
     },
     {
+      "id": "achievement:daily-xp-360",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "360 XP за день",
+      "description": "Достичь 360 Coding XP за один день.",
+      "icon": "XP",
+      "rarity": "epic",
+      "sourceId": "daily-xp-360"
+    },
+    {
+      "id": "achievement:daily-minutes-360",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "6 ч кодинга",
+      "description": "360 минут реальной WakaTime-активности за день.",
+      "icon": "TM",
+      "rarity": "legendary",
+      "sourceId": "daily-minutes-360"
+    },
+    {
       "id": "daily-120",
       "date": "2026-07-06",
       "type": "achievement",
@@ -524,5 +544,5 @@
       "sourceId": "small-fire-stone"
     }
   ],
-  "updatedAt": "2026-07-07T14:28:05.710Z"
+  "updatedAt": "2026-07-07T17:24:55.866Z"
 }
