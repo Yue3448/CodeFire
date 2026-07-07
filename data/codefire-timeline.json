@@ -80,6 +80,64 @@
       "sourceId": "python-xp-100"
     },
     {
+      "id": "achievement:first-note",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "Первая заметка",
+      "description": "Сохранить первую заметку.",
+      "icon": "NT",
+      "rarity": "common",
+      "sourceId": "first-note"
+    },
+    {
+      "id": "achievement:journal-notes-1",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "1 заметок",
+      "description": "Собрать 1 дневниковых заметок.",
+      "icon": "JN",
+      "rarity": "common",
+      "sourceId": "journal-notes-1"
+    },
+    {
+      "id": "achievement:journal-hard-day",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "Заметка после hard day",
+      "description": "Рефлексия после тяжелого дня.",
+      "icon": "HD",
+      "rarity": "rare",
+      "sourceId": "journal-hard-day"
+    },
+    {
+      "id": "achievement:journal-max-survived",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "Выжил максимум",
+      "description": "Заметка с самым тяжелым настроением.",
+      "icon": "MX",
+      "rarity": "rare",
+      "sourceId": "journal-max-survived"
+    },
+    {
+      "id": "achievement:journal-after-first",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "Первый After note",
+      "description": "Записать первый итог после практики.",
+      "icon": "AF",
+      "rarity": "common",
+      "sourceId": "journal-after-first"
+    },
+    {
+      "id": "note-2026-07-07",
+      "date": "2026-07-07",
+      "type": "note",
+      "title": "Заметка дня",
+      "description": "normal",
+      "icon": "✎"
+    },
+    {
       "id": "daily-120",
       "date": "2026-07-06",
       "type": "achievement",
@@ -198,16 +256,6 @@
       "sourceId": "typescript-half-hour"
     },
     {
-      "id": "achievement:first-note",
-      "date": "2026-07-06",
-      "type": "achievement",
-      "title": "Первая заметка",
-      "description": "Сохранить первую заметку.",
-      "icon": "NT",
-      "rarity": "common",
-      "sourceId": "first-note"
-    },
-    {
       "id": "achievement:daily-xp-60",
       "date": "2026-07-06",
       "type": "achievement",
@@ -276,36 +324,6 @@
       "icon": "TS",
       "rarity": "common",
       "sourceId": "typescript-xp-100"
-    },
-    {
-      "id": "achievement:journal-notes-1",
-      "date": "2026-07-06",
-      "type": "achievement",
-      "title": "1 заметок",
-      "description": "Собрать 1 дневниковых заметок.",
-      "icon": "JN",
-      "rarity": "common",
-      "sourceId": "journal-notes-1"
-    },
-    {
-      "id": "achievement:journal-hard-day",
-      "date": "2026-07-06",
-      "type": "achievement",
-      "title": "Заметка после hard day",
-      "description": "Рефлексия после тяжелого дня.",
-      "icon": "HD",
-      "rarity": "rare",
-      "sourceId": "journal-hard-day"
-    },
-    {
-      "id": "achievement:journal-max-survived",
-      "date": "2026-07-06",
-      "type": "achievement",
-      "title": "Выжил максимум",
-      "description": "Заметка с самым тяжелым настроением.",
-      "icon": "MX",
-      "rarity": "rare",
-      "sourceId": "journal-max-survived"
     },
     {
       "id": "item:first-code-rune",
@@ -506,5 +524,5 @@
       "sourceId": "small-fire-stone"
     }
   ],
-  "updatedAt": "2026-07-07T13:09:29.804Z"
+  "updatedAt": "2026-07-07T14:28:05.710Z"
 }
