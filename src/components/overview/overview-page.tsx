@@ -13,6 +13,19 @@ import { cn } from "@/lib/utils";
 const OVERVIEW_HEATMAP_LEGEND_XP_VALUES = [0, 1, 31, 61, 121, 241] as const;
 const PYTHON_LOGO_SRC = "/languages/python_logo.png";
 
+type LearningBalanceStatus = "notStarted" | "light" | "steady" | "productive" | "intense" | "overloadRisk" | "recovery";
+type LearningBalanceTone = "neutral" | "healthy" | "productive" | "intense" | "warning";
+
+type LearningBalance = {
+  score: number;
+  status: LearningBalanceStatus;
+  title: string;
+  description: string;
+  nextAction: string;
+  meta: string;
+  tone: LearningBalanceTone;
+};
+
 export function OverviewPage() {
   const state = useRemoteData<CodeFireOverviewData>("/api/overview");
 
@@ -31,6 +44,14 @@ export function OverviewPage() {
   const histogramDays = data.last30Days.days.slice(-7);
   const heatmapDays = data.last30Days.days.slice(-30);
   const levelXpLeft = Math.max(0, data.progression.nextLevelXP - data.progression.totalXP);
+  const learningBalance = calculateLearningBalance({
+    today: data.today,
+    dailyLanguages,
+    streakCurrent: rpg.streak.current,
+    quests: rpg.quests,
+    pomodoroToday: data.pomodoroToday,
+    recentDays: data.last30Days.days,
+  });
 
   return (
     <div className="grid gap-5">
@@ -146,6 +167,7 @@ export function OverviewPage() {
             <MiniHistogram days={histogramDays} />
             <MiniSparkline days={chartDays} />
           </div>
+          <LearningBalancePanel balance={learningBalance} />
         </Card>
       </section>
 
@@ -456,6 +478,43 @@ function MiniTrendTooltip({ day, className }: { day: DayStat; className?: string
   );
 }
 
+function LearningBalancePanel({ balance }: { balance: LearningBalance }) {
+  return (
+    <div className="mt-3 min-w-0 rounded-lg border border-white/10 bg-black/20 p-3">
+      <div className="mb-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Learning Balance</div>
+          <div className="mt-1 break-words text-sm font-black text-white">Баланс обучения</div>
+        </div>
+        <span
+          className={cn(
+            "rounded-full border px-2.5 py-1 text-[11px] font-black",
+            getLearningBalanceToneClass(balance.tone, "badge"),
+          )}
+        >
+          {balance.title}
+        </span>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+        <div className="text-4xl font-black leading-none text-white">{balance.score}%</div>
+        <div className="min-w-0">
+          <div className="break-words text-xs font-bold text-emerald-100">{balance.meta}</div>
+          <div className="mt-1 break-words text-xs leading-5 text-zinc-400">{balance.description}</div>
+          <div className="mt-1 break-words text-xs leading-5 text-orange-100">{balance.nextAction}</div>
+        </div>
+      </div>
+
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full border border-emerald-300/15 bg-black/40">
+        <div
+          className={cn("h-full rounded-full shadow-[0_0_14px_rgba(89,255,145,0.22)]", getLearningBalanceToneClass(balance.tone, "bar"))}
+          style={{ width: `${balance.score}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function OverviewHeatmap({ days }: { days: DayStat[] }) {
   const sortedDays = [...days].sort((a, b) => a.date.localeCompare(b.date));
   const cells = buildMonthlyHeatmapCells(sortedDays);
@@ -530,6 +589,216 @@ function getDailyLanguageBreakdown(languages: LanguageStat[]) {
   const preferredLanguages = codingLanguages.length > 0 ? codingLanguages : languages;
 
   return preferredLanguages.slice(0, 4);
+}
+
+function calculateLearningBalance({
+  today,
+  dailyLanguages,
+  streakCurrent,
+  quests,
+  pomodoroToday,
+  recentDays,
+}: {
+  today: CodeFireOverviewData["today"];
+  dailyLanguages: LanguageStat[];
+  streakCurrent: number;
+  quests: CodeFireOverviewData["rpg"]["quests"];
+  pomodoroToday: CodeFireOverviewData["pomodoroToday"];
+  recentDays: DayStat[];
+}): LearningBalance {
+  const codingMinutes = Math.round(today.totalSeconds / 60);
+  const yesterday = recentDays.at(-2);
+  const yesterdayMinutes = yesterday ? Math.round(getCodingSeconds(yesterday) / 60) : 0;
+  const mainLanguage = dailyLanguages[0]?.name ?? (today.mainLanguage === "Нет кода" ? null : today.mainLanguage);
+  const focusPercent = dailyLanguages[0]?.percent ?? 0;
+  const completedQuests = quests.filter((quest) => quest.completed).length;
+  const openQuests = quests.length - completedQuests;
+  const questRatio = quests.length > 0 ? completedQuests / quests.length : 0;
+  const bestDaySeconds = Math.max(0, ...recentDays.map((day) => getCodingSeconds(day)));
+  const closeToRecord = codingMinutes > 0 && bestDaySeconds > 0 && bestDaySeconds - today.totalSeconds > 0 && bestDaySeconds - today.totalSeconds <= 30 * 60;
+  const status = getLearningBalanceStatus(codingMinutes, yesterdayMinutes);
+  let score = getBaseLearningBalanceScore(status, codingMinutes);
+
+  if (today.xp >= codingMinutes - 2) score += 2;
+  if (focusPercent >= 85) score += 7;
+  else if (focusPercent >= 70) score += 5;
+  else if (focusPercent < 40 && codingMinutes >= 60) score -= 4;
+
+  if (streakCurrent >= 3) score += 4;
+  else if (streakCurrent >= 1) score += 2;
+  if (streakCurrent >= 7 && codingMinutes >= 300) score -= 6;
+
+  score += Math.round(questRatio * 6);
+
+  if (pomodoroToday.completedFocusSessions > 0) score += Math.min(5, pomodoroToday.completedFocusSessions * 2);
+  if (pomodoroToday.completedBreakSessions > 0) score += 2;
+  if (pomodoroToday.completedFocusSessions >= 3 && pomodoroToday.completedBreakSessions === 0) score -= 4;
+
+  if (status === "overloadRisk") score = Math.min(score, 74);
+  if (status === "notStarted") score = Math.min(score, 24);
+
+  const title = getLearningBalanceTitle(status);
+  const tone = getLearningBalanceTone(status);
+
+  return {
+    score: clampScore(score),
+    status,
+    title,
+    tone,
+    meta: `${formatDuration(today.totalSeconds)} coding · ${mainLanguage ? `${mainLanguage} focus` : "no main focus"}`,
+    description: getLearningBalanceDescription(status, codingMinutes, mainLanguage, focusPercent),
+    nextAction: getLearningBalanceNextAction({
+      status,
+      codingMinutes,
+      closeToRecord,
+      openQuests,
+      completedFocusSessions: pomodoroToday.completedFocusSessions,
+    }),
+  };
+}
+
+function getLearningBalanceStatus(codingMinutes: number, yesterdayMinutes: number): LearningBalanceStatus {
+  if (yesterdayMinutes >= 240 && codingMinutes > 0 && codingMinutes <= 60) return "recovery";
+  if (codingMinutes === 0) return "notStarted";
+  if (codingMinutes <= 30) return "light";
+  if (codingMinutes <= 90) return "steady";
+  if (codingMinutes <= 180) return "productive";
+  if (codingMinutes < 300) return "intense";
+
+  return "overloadRisk";
+}
+
+function getBaseLearningBalanceScore(status: LearningBalanceStatus, codingMinutes: number) {
+  switch (status) {
+    case "notStarted":
+      return 18;
+    case "light":
+      return 44 + Math.min(10, Math.round(codingMinutes / 3));
+    case "steady":
+      return 58 + Math.min(14, Math.round((codingMinutes - 30) / 4));
+    case "productive":
+      return 74 + Math.min(10, Math.round((codingMinutes - 90) / 9));
+    case "intense":
+      return 82;
+    case "overloadRisk":
+      return 68;
+    case "recovery":
+      return 70;
+  }
+}
+
+function getLearningBalanceTitle(status: LearningBalanceStatus) {
+  switch (status) {
+    case "notStarted":
+      return "День ещё не начался";
+    case "light":
+      return "Лёгкий день";
+    case "steady":
+      return "Стабильная практика";
+    case "productive":
+      return "Продуктивный день";
+    case "intense":
+      return "Интенсивный день";
+    case "overloadRisk":
+      return "Риск перегруза";
+    case "recovery":
+      return "День восстановления";
+  }
+}
+
+function getLearningBalanceDescription(
+  status: LearningBalanceStatus,
+  codingMinutes: number,
+  mainLanguage: string | null,
+  focusPercent: number,
+) {
+  if (status === "notStarted") return "Пока нет кодинг-активности. Можно начать с маленькой сессии на 15 минут.";
+  if (status === "recovery") return "После сильного дня короткая практика — нормальный и полезный ритм.";
+  if (status === "overloadRisk") return "Сегодня очень высокая нагрузка. Лучше завершить день мягко и восстановиться.";
+  if (codingMinutes <= 60) return "День начат. Небольшая практика помогает сохранить ритм.";
+  if (codingMinutes <= 120) return "Хорошая учебная сессия: достаточно практики для реального прогресса.";
+  if (codingMinutes <= 240) {
+    return mainLanguage && focusPercent >= 70
+      ? `Сильный день: основной фокус сегодня — ${mainLanguage}.`
+      : "Сильный день: объём уже заметный, прогресс хорошо закрепляется.";
+  }
+
+  return "Очень мощный день. Лучше не забыть про перерыв и короткий итог в дневнике.";
+}
+
+function getLearningBalanceNextAction({
+  status,
+  codingMinutes,
+  closeToRecord,
+  openQuests,
+  completedFocusSessions,
+}: {
+  status: LearningBalanceStatus;
+  codingMinutes: number;
+  closeToRecord: boolean;
+  openQuests: number;
+  completedFocusSessions: number;
+}) {
+  if (status === "notStarted") return "Следующий шаг: короткая 15-минутная сессия или спокойный отдых.";
+  if (status === "overloadRisk") return "Следующий шаг: остановиться мягко, сделать перерыв и восстановиться.";
+  if (closeToRecord) return "Следующий шаг: ты близко к личному рекорду дня — можно добрать несколько минут без рывка.";
+  if (codingMinutes >= 240) return "Следующий шаг: запиши короткий итог дня и сделай паузу.";
+  if (completedFocusSessions === 0 && codingMinutes >= 90) return "Следующий шаг: добавь структурированный перерыв, чтобы не смазать фокус.";
+  if (openQuests > 0 && codingMinutes >= 30) return "Следующий шаг: можно закрыть один открытый daily quest.";
+  if (status === "light" || status === "recovery") return "Следующий шаг: если устал, light day тоже считается.";
+
+  return "Следующий шаг: хороший день для спокойного завершения без перегруза.";
+}
+
+function getLearningBalanceTone(status: LearningBalanceStatus): LearningBalanceTone {
+  switch (status) {
+    case "notStarted":
+      return "neutral";
+    case "light":
+    case "recovery":
+      return "healthy";
+    case "steady":
+    case "productive":
+      return "productive";
+    case "intense":
+      return "intense";
+    case "overloadRisk":
+      return "warning";
+  }
+}
+
+function getLearningBalanceToneClass(tone: LearningBalanceTone, target: "badge" | "bar") {
+  if (target === "bar") {
+    switch (tone) {
+      case "neutral":
+        return "bg-zinc-500";
+      case "healthy":
+        return "bg-gradient-to-r from-emerald-500 to-emerald-300";
+      case "productive":
+        return "bg-gradient-to-r from-emerald-500 to-orange-300";
+      case "intense":
+        return "bg-gradient-to-r from-orange-500 to-amber-300";
+      case "warning":
+        return "bg-gradient-to-r from-orange-600 to-red-400";
+    }
+  }
+
+  switch (tone) {
+    case "neutral":
+      return "border-zinc-400/20 bg-zinc-400/10 text-zinc-200";
+    case "healthy":
+      return "border-emerald-300/20 bg-emerald-300/10 text-emerald-100";
+    case "productive":
+      return "border-emerald-300/25 bg-emerald-300/10 text-emerald-100";
+    case "intense":
+      return "border-orange-300/25 bg-orange-300/10 text-orange-100";
+    case "warning":
+      return "border-red-300/25 bg-red-400/10 text-red-100";
+  }
+}
+
+function clampScore(score: number) {
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
 
 function buildMonthlyHeatmapCells(days: DayStat[]) {
