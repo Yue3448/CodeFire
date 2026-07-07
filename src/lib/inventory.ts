@@ -21,7 +21,7 @@ export type InventoryItem = {
   equipped?: boolean;
 };
 
-export type InventorySlot = "amulet" | "ring" | "artifact";
+export type InventorySlot = "artifact" | "amulet" | "ring" | "book" | "weapon" | "cloak" | "cosmetic";
 
 export type InventoryStats = {
   total: number;
@@ -47,6 +47,24 @@ export type InventoryState = {
   boosts: AdventureXpBoosts;
 };
 
+export type InventoryFilters = {
+  status: "all" | "unlocked" | "locked" | "equipped";
+  type: "all" | InventorySlot | "badge" | "frame" | "theme";
+  rarity: "all" | InventoryItem["rarity"];
+  effect: "all" | "quest" | "pomodoro" | "language" | "recovery" | "cosmetic";
+  search: string;
+};
+
+export type InventorySort =
+  | "equippedFirst"
+  | "unlockedFirst"
+  | "rarityDesc"
+  | "rarityAsc"
+  | "type"
+  | "name"
+  | "closestToUnlock"
+  | "newestUnlocked";
+
 type InventoryFile = {
   version: 1;
   unlocked: Record<string, { unlockedAt: string; source?: string }>;
@@ -70,10 +88,28 @@ const emptyBoosts: AdventureXpBoosts = {
   studyTaskBoost: 0,
 };
 
-function slotForItem(item: InventoryItem): InventorySlot {
+const equipableSlots = ["artifact", "amulet", "ring", "book", "weapon", "cloak", "cosmetic"] as const satisfies InventorySlot[];
+const rarityScore: Record<InventoryItem["rarity"], number> = {
+  common: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+  mythic: 5,
+};
+
+export function getSlotForItem(item: Pick<InventoryItem, "type">): InventorySlot | null {
+  if (item.type === "artifact") return "artifact";
   if (item.type === "amulet") return "amulet";
   if (item.type === "ring") return "ring";
-  return "artifact";
+  if (item.type === "book") return "book";
+  if (item.type === "weapon") return "weapon";
+  if (item.type === "cloak") return "cloak";
+  if (item.type === "cosmetic" || item.type === "frame" || item.type === "themeToken" || item.type === "crown") return "cosmetic";
+  return null;
+}
+
+export function canEquipItem(item: Pick<InventoryItem, "type" | "unlocked">) {
+  return item.unlocked && Boolean(getSlotForItem(item));
 }
 
 function calculateStats(items: InventoryItem[]): InventoryStats {
@@ -113,6 +149,97 @@ function calculateBoosts(items: InventoryItem[]): AdventureXpBoosts {
       },
       { ...emptyBoosts, languageQuestBoosts: {} },
     );
+}
+
+export function calculateActiveItemEffects(items: InventoryItem[]) {
+  return items
+    .filter((item) => item.unlocked && item.equipped && item.effect)
+    .map((item) => ({
+      itemId: item.id,
+      itemName: item.name,
+      effect: item.effect,
+      label: effectLabel(item),
+    }));
+}
+
+export function calculateTotalAdventureBoost(boosts: AdventureXpBoosts) {
+  const languageBoost = Object.values(boosts.languageQuestBoosts).reduce((sum, value) => sum + value, 0);
+  return boosts.questAdventureXpBoost + boosts.pomodoroQuestBoost + boosts.recoveryBoost + boosts.studyTaskBoost + languageBoost;
+}
+
+export function effectLabel(item: Pick<InventoryItem, "effect" | "description">) {
+  const effect = item.effect;
+  if (!effect || effect.kind === "cosmeticOnly") return "Cosmetic only";
+  if (effect.kind === "questAdventureXpBoost") return `+${effect.value ?? 0}% Adventure XP for daily quests`;
+  if (effect.kind === "languageQuestBoost") return `+${effect.value ?? 0}% Adventure XP for ${effect.language ?? "language"} quests`;
+  if (effect.kind === "pomodoroQuestBoost") return `+${effect.value ?? 0}% Pomodoro quest XP`;
+  if (effect.kind === "recoveryBoost") return `+${effect.value ?? 0}% recovery quest XP`;
+  if (effect.kind === "studyTaskBoost") return `+${effect.value ?? 0}% study quest XP`;
+  return item.description;
+}
+
+function effectMatches(item: InventoryItem, effect: InventoryFilters["effect"]) {
+  if (effect === "all") return true;
+  if (effect === "cosmetic") return !item.effect || item.effect.kind === "cosmeticOnly";
+  if (effect === "quest") return item.effect?.kind === "questAdventureXpBoost" || item.effect?.kind === "studyTaskBoost";
+  if (effect === "pomodoro") return item.effect?.kind === "pomodoroQuestBoost";
+  if (effect === "language") return item.effect?.kind === "languageQuestBoost";
+  if (effect === "recovery") return item.effect?.kind === "recoveryBoost";
+  return true;
+}
+
+function typeMatches(item: InventoryItem, type: InventoryFilters["type"]) {
+  if (type === "all") return true;
+  if (type === "theme") return item.type === "themeToken";
+  if (type === "cosmetic") return getSlotForItem(item) === "cosmetic";
+  return item.type === type;
+}
+
+export function filterInventoryItems(items: InventoryItem[], filters: InventoryFilters) {
+  const search = filters.search.trim().toLowerCase();
+
+  return items.filter((item) => {
+    const statusMatch =
+      filters.status === "all" ||
+      (filters.status === "unlocked" && item.unlocked) ||
+      (filters.status === "locked" && !item.unlocked) ||
+      (filters.status === "equipped" && Boolean(item.equipped));
+    const rarityMatch = filters.rarity === "all" || item.rarity === filters.rarity;
+    const searchable = [
+      item.name,
+      item.description,
+      item.type,
+      item.rarity,
+      item.source,
+      item.unlockLabel,
+      effectLabel(item),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return statusMatch && rarityMatch && typeMatches(item, filters.type) && effectMatches(item, filters.effect) && (!search || searchable.includes(search));
+  });
+}
+
+function unlockPercent(item: InventoryItem) {
+  if (item.unlocked) return 100;
+  if (!item.unlockTarget) return 0;
+  return Math.min(100, ((item.unlockProgress ?? 0) / item.unlockTarget) * 100);
+}
+
+export function sortInventoryItems(items: InventoryItem[], sort: InventorySort) {
+  return [...items].sort((a, b) => {
+    if (sort === "equippedFirst") return Number(b.equipped) - Number(a.equipped) || Number(b.unlocked) - Number(a.unlocked) || rarityScore[b.rarity] - rarityScore[a.rarity] || a.name.localeCompare(b.name);
+    if (sort === "unlockedFirst") return Number(b.unlocked) - Number(a.unlocked) || Number(b.equipped) - Number(a.equipped) || rarityScore[b.rarity] - rarityScore[a.rarity] || a.name.localeCompare(b.name);
+    if (sort === "rarityDesc") return rarityScore[b.rarity] - rarityScore[a.rarity] || a.name.localeCompare(b.name);
+    if (sort === "rarityAsc") return rarityScore[a.rarity] - rarityScore[b.rarity] || a.name.localeCompare(b.name);
+    if (sort === "type") return a.type.localeCompare(b.type) || rarityScore[b.rarity] - rarityScore[a.rarity] || a.name.localeCompare(b.name);
+    if (sort === "name") return a.name.localeCompare(b.name);
+    if (sort === "closestToUnlock") return Number(a.unlocked) - Number(b.unlocked) || unlockPercent(b) - unlockPercent(a) || a.name.localeCompare(b.name);
+    if (sort === "newestUnlocked") return (b.unlockedAt ?? "").localeCompare(a.unlockedAt ?? "") || a.name.localeCompare(b.name);
+    return 0;
+  });
 }
 
 async function readInventoryFile(): Promise<InventoryFile> {
@@ -216,13 +343,21 @@ export async function unlockItem(itemId: string, source = "CodeFire") {
 
 export async function equipItem(itemId: string) {
   const data = await readInventoryFile();
-  const item = inventoryCatalog.find((entry) => entry.id === itemId);
+  const id = normalizeText(itemId, 80);
+  const item = inventoryCatalog.find((entry) => entry.id === id);
+  const slot = item ? getSlotForItem(item) : null;
 
-  if (!item || !data.unlocked[item.id]) {
+  if (!item || !slot || !data.unlocked[item.id]) {
     return getInventory();
   }
 
-  data.equipped[slotForItem(item)] = item.id;
+  for (const key of equipableSlots) {
+    if (data.equipped[key] === item.id) {
+      delete data.equipped[key];
+    }
+  }
+
+  data.equipped[slot] = item.id;
   await writeInventoryFile(data);
 
   return getInventory();
@@ -230,10 +365,13 @@ export async function equipItem(itemId: string) {
 
 export async function unequipItem(itemId: string) {
   const data = await readInventoryFile();
+  const id = normalizeText(itemId, 80);
 
-  if (data.equipped.amulet === itemId) delete data.equipped.amulet;
-  if (data.equipped.ring === itemId) delete data.equipped.ring;
-  if (data.equipped.artifact === itemId) delete data.equipped.artifact;
+  for (const key of equipableSlots) {
+    if (data.equipped[key] === id) {
+      delete data.equipped[key];
+    }
+  }
 
   await writeInventoryFile(data);
 

@@ -7,10 +7,11 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const withProgress = request.nextUrl.searchParams.get("progress") === "1";
+  const forceRefresh = request.nextUrl.searchParams.get("refresh") === "1";
   const apiKey = process.env.WAKATIME_API_KEY;
 
   if (withProgress && apiKey) {
-    const { data, cache } = await getCachedFullCodeFireData(apiKey);
+    const { data, cache } = await getCachedFullCodeFireData(apiKey, forceRefresh);
 
     return NextResponse.json(
       { inventory: data.rpg?.learning.inventory ?? (await getInventory()) },
@@ -36,14 +37,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "itemId is required" }, { status: 400 });
   }
 
-  let inventory = await equipItem(payload.itemId);
+  let inventory;
 
   if (payload.action === "unlock") {
     inventory = await unlockItem(payload.itemId, payload.source);
+  } else if (payload.action === "unequip") {
+    inventory = await unequipItem(payload.itemId);
+  } else if (payload.action === "equip") {
+    inventory = await equipItem(payload.itemId);
+  } else {
+    return NextResponse.json({ error: "Unsupported inventory action." }, { status: 400 });
   }
 
-  if (payload.action === "unequip") {
-    inventory = await unequipItem(payload.itemId);
+  const apiKey = process.env.WAKATIME_API_KEY;
+
+  if (apiKey) {
+    const { data, cache } = await getCachedFullCodeFireData(apiKey, true);
+    return NextResponse.json(
+      { inventory: data.rpg?.learning.inventory ?? inventory },
+      {
+        headers: {
+          "X-CodeFire-Cache": cache,
+        },
+      },
+    );
   }
 
   return NextResponse.json({ inventory });

@@ -55,6 +55,10 @@
     }
   },
   "equipped": {
-    "artifact": "small-fire-stone"
+    "ring": "typed-ring",
+    "amulet": "serpent-amulet",
+    "artifact": "api-artifact",
+    "cloak": "cloak-recovery",
+    "cosmetic": "season-frame"
   }
 }
