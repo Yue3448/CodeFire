@@ -32,6 +32,8 @@ export type ConditionProgressContext = {
   stepikEntries?: StepikEntry[];
   topics?: TopicProgress[];
   bosses?: BossFight[];
+  quests?: Array<{ completed?: boolean }>;
+  weeklyQuests?: Array<{ completed?: boolean }>;
   inventoryItems?: Array<{ id: string; rarity?: string; unlocked?: boolean; equipped?: boolean; unlockedAt?: string }>;
   achievements?: Array<{ id: string; rarity?: string; unlocked?: boolean; unlockedAt?: string }>;
   seasonLevel?: number;
@@ -105,6 +107,25 @@ function languageSeconds(day: DailyCodingActivity, language: string) {
 
 function languageXp(day: DailyCodingActivity, language: string) {
   return day.languages.find((item) => item.name.toLowerCase() === language.toLowerCase())?.xp ?? 0;
+}
+
+function languageCountForPeriod(context: ConditionProgressContext, condition: Extract<CodeFireCondition, { kind: "languageCount" }>) {
+  const totals = new Map<string, { xp: number; minutes: number }>();
+
+  for (const day of daysForPeriod(context, condition.period ?? "all")) {
+    for (const language of day.languages) {
+      const current = totals.get(language.name) ?? { xp: 0, minutes: 0 };
+      current.xp += language.xp;
+      current.minutes += Math.floor(language.seconds / 60);
+      totals.set(language.name, current);
+    }
+  }
+
+  return [...totals.values()].filter((entry) => {
+    if (condition.minXp !== undefined && entry.xp < condition.minXp) return false;
+    if (condition.minMinutes !== undefined && entry.minutes < condition.minMinutes) return false;
+    return entry.xp > 0 || entry.minutes > 0;
+  }).length;
 }
 
 function focusPercent(day: DailyCodingActivity) {
@@ -253,6 +274,10 @@ export function getConditionProgress(
     return progressFromDays(context, condition.period, condition.target, (day) => languageXp(day, condition.language));
   }
 
+  if (condition.kind === "languageCount") {
+    return clamp(languageCountForPeriod(context, condition), condition.target);
+  }
+
   if (condition.kind === "mainLanguageMinutes") {
     const language = context.mainLanguage;
     if (!language || language === "Нет кода") return clamp(0, condition.target);
@@ -364,6 +389,18 @@ export function getConditionProgress(
       return true;
     });
     return clamp(bosses.length, condition.target, bosses[0]?.completedAt?.slice(0, 10));
+  }
+
+  if (condition.kind === "questsCompleted") {
+    const quests = condition.period === "week" || condition.includeWeekly
+      ? [...(context.quests ?? []), ...(context.weeklyQuests ?? [])]
+      : context.quests ?? [];
+    return clamp(quests.filter((quest) => quest.completed).length, condition.target);
+  }
+
+  if (condition.kind === "allQuestsCompleted") {
+    const quests = condition.period === "week" ? context.weeklyQuests ?? [] : context.quests ?? [];
+    return clamp(quests.length > 0 && quests.every((quest) => quest.completed) ? 1 : 0, 1);
   }
 
   if (condition.kind === "inventoryItems") {

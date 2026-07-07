@@ -158,6 +158,56 @@
       "sourceId": "daily-minutes-360"
     },
     {
+      "id": "achievement:coding-minutes-day-360",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "6h coding day",
+      "description": "Reach 360 WakaTime coding minutes in one day.",
+      "icon": "CT",
+      "rarity": "legendary",
+      "sourceId": "coding-minutes-day-360"
+    },
+    {
+      "id": "achievement:coding-xp-total-500",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "500 Coding XP",
+      "description": "Accumulate 500 WakaTime Coding XP.",
+      "icon": "XP",
+      "rarity": "common",
+      "sourceId": "coding-xp-total-500"
+    },
+    {
+      "id": "achievement:streak-2",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "2 дней подряд",
+      "description": "Поддержать серию 2 активных дней.",
+      "icon": "ST",
+      "rarity": "rare",
+      "sourceId": "streak-2"
+    },
+    {
+      "id": "achievement:first-language-100-xp",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "First language 100 XP",
+      "description": "Reach 100 XP in any tracked language.",
+      "icon": "L1",
+      "rarity": "common",
+      "sourceId": "first-language-100-xp"
+    },
+    {
+      "id": "achievement:typescript-xp-300",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "TypeScript 300 XP",
+      "description": "Accumulate 300 XP in TypeScript.",
+      "icon": "TS",
+      "rarity": "rare",
+      "sourceId": "typescript-xp-300"
+    },
+    {
       "id": "daily-120",
       "date": "2026-07-06",
       "type": "achievement",
@@ -386,6 +436,66 @@
       "sourceId": "typed-ring"
     },
     {
+      "id": "achievement:coding-minutes-day-30",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "30 min coding day",
+      "description": "Reach 30 WakaTime coding minutes in one day.",
+      "icon": "CT",
+      "rarity": "common",
+      "sourceId": "coding-minutes-day-30"
+    },
+    {
+      "id": "achievement:coding-minutes-day-60",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "1h coding day",
+      "description": "Reach 60 WakaTime coding minutes in one day.",
+      "icon": "CT",
+      "rarity": "common",
+      "sourceId": "coding-minutes-day-60"
+    },
+    {
+      "id": "achievement:coding-minutes-day-120",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "2h coding day",
+      "description": "Reach 120 WakaTime coding minutes in one day.",
+      "icon": "CT",
+      "rarity": "rare",
+      "sourceId": "coding-minutes-day-120"
+    },
+    {
+      "id": "achievement:coding-minutes-day-240",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "4h coding day",
+      "description": "Reach 240 WakaTime coding minutes in one day.",
+      "icon": "CT",
+      "rarity": "epic",
+      "sourceId": "coding-minutes-day-240"
+    },
+    {
+      "id": "achievement:coding-xp-total-100",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "100 Coding XP",
+      "description": "Accumulate 100 WakaTime Coding XP.",
+      "icon": "XP",
+      "rarity": "common",
+      "sourceId": "coding-xp-total-100"
+    },
+    {
+      "id": "achievement:coding-xp-total-250",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "250 Coding XP",
+      "description": "Accumulate 250 WakaTime Coding XP.",
+      "icon": "XP",
+      "rarity": "common",
+      "sourceId": "coding-xp-total-250"
+    },
+    {
       "id": "first-python-day",
       "date": "2026-07-01",
       "type": "achievement",
@@ -542,7 +652,47 @@
       "icon": "FS",
       "rarity": "common",
       "sourceId": "small-fire-stone"
+    },
+    {
+      "id": "achievement:dominant-language-70",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Dominant language 70%",
+      "description": "Reach a day with 70%+ focus in one language.",
+      "icon": "D7",
+      "rarity": "rare",
+      "sourceId": "dominant-language-70"
+    },
+    {
+      "id": "achievement:focus-master-day",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Focus Master Day",
+      "description": "Reach 90%+ single-language focus in one day.",
+      "icon": "FM",
+      "rarity": "epic",
+      "sourceId": "focus-master-day"
+    },
+    {
+      "id": "achievement:consistency-first-active-day",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "First active day",
+      "description": "Record the first active WakaTime coding day.",
+      "icon": "AD",
+      "rarity": "common",
+      "sourceId": "consistency-first-active-day"
+    },
+    {
+      "id": "achievement:special-peak-focus",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Peak Focus",
+      "description": "Reach 95%+ focus in one language.",
+      "icon": "PF",
+      "rarity": "epic",
+      "sourceId": "special-peak-focus"
     }
   ],
-  "updatedAt": "2026-07-07T20:45:25.022Z"
+  "updatedAt": "2026-07-07T21:18:02.440Z"
 }

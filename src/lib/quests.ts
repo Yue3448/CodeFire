@@ -157,7 +157,7 @@ export function getDailyQuests(
   options: QuestOptions = {},
 ): DailyQuest[] {
   const context = buildContext(today, date, mainLanguage, options);
-  const targetCount = 3 + getStableIndex(`${date}:quest-count`, 3);
+  const targetCount = 4 + getStableIndex(`${date}:quest-count`, 2);
   const selected = pickStableQuests(dailyQuestCatalog, targetCount, date, mainLanguage, context);
 
   return selected.map((definition) => materializeQuest(definition, context));
@@ -179,7 +179,7 @@ export function getWeeklyQuests({
   options?: QuestOptions;
 }): WeeklyQuest[] {
   const context = buildContext(today, date, mainLanguage, { ...options, weekDays, days });
-  const selected = pickStableQuests(weeklyQuestCatalog, 3, `${date}:weekly`, mainLanguage, context);
+  const selected = pickStableQuests(weeklyQuestCatalog, 4, `${date}:weekly`, mainLanguage, context);
 
   return selected.map((definition) => ({
     ...materializeQuest(definition, context),

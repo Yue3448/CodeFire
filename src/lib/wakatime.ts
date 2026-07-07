@@ -320,6 +320,8 @@ export async function getCodeFireData(apiKey: string): Promise<CodeFireData> {
     getAchievements(dailyCodingActivityLast365Days, totalXP, {
       pomodoroStats: pomodoroData.stats,
       notes,
+      quests,
+      weeklyQuests,
     }),
   );
   const achievements = getFeaturedAchievements(allAchievements);

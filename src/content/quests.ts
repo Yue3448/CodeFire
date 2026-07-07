@@ -341,6 +341,15 @@ const bossPrepDailyQuests: QuestDefinition[] = [
   quest({ id: "daily-boss-finish", title: "Добить босса", description: "Завершить последний requirement.", category: "bossPrep", difficulty: "epic", target: 1, unit: "count", rewardAdventureXp: 90, condition: { kind: "bossDefeated", target: 1 } }),
 ];
 
+const extraDailyQuests: QuestDefinition[] = [
+  quest({ id: "daily-main-language-30", title: "Main skill spark", description: "30 минут в главном языке дня.", category: "language", difficulty: "easy", target: 30, unit: "minutes", rewardAdventureXp: 20, condition: { kind: "mainLanguageMinutes", target: 30, period: "day" } }),
+  quest({ id: "daily-main-language-90", title: "Main skill forge", description: "90 минут в главном языке дня.", category: "language", difficulty: "hard", target: 90, unit: "minutes", rewardAdventureXp: 55, condition: { kind: "mainLanguageMinutes", target: 90, period: "day" } }),
+  quest({ id: "daily-note-and-code", title: "Plan and code", description: "Заметка дня и 30 минут кодинга.", category: "journal", difficulty: "normal", target: 2, unit: "count", rewardAdventureXp: 30, condition: { kind: "all", conditions: [{ kind: "journalNotes", target: 1, period: "day" }, { kind: "codingMinutes", target: 30, period: "day" }] } }),
+  quest({ id: "daily-topic-double", title: "Topic push", description: "Две учебные задачи по теме.", category: "topic", difficulty: "normal", target: 2, unit: "tasks", rewardAdventureXp: 35, condition: { kind: "studyTasks", target: 2, period: "day" } }),
+  quest({ id: "daily-comeback-spark", title: "Comeback spark", description: "Вернуться короткой сессией после паузы или тяжелого дня.", category: "recovery", difficulty: "easy", target: 15, unit: "minutes", rewardAdventureXp: 16, condition: { kind: "codingMinutes", target: 15, period: "day" } }),
+  quest({ id: "daily-focus-70", title: "Focused route", description: "70% фокуса на одном языке.", category: "language", difficulty: "normal", target: 70, unit: "percent", rewardAdventureXp: 32, condition: { kind: "focusPercent", target: 70, period: "day" } }),
+];
+
 export const dailyQuestCatalog: QuestDefinition[] = [
   ...timeDailyQuests,
   ...pythonDailyQuests,
@@ -352,14 +361,22 @@ export const dailyQuestCatalog: QuestDefinition[] = [
   ...topicDailyQuests,
   ...recoveryDailyQuests,
   ...bossPrepDailyQuests,
+  ...extraDailyQuests,
 ];
 
 export const weeklyQuestCatalog: QuestDefinition[] = [
+  quest({ id: "weekly-active-3", title: "3 активных дня", description: "3 дня с Coding XP за неделю.", category: "consistency", difficulty: "easy", target: 3, unit: "count", rewardAdventureXp: 80, condition: { kind: "activeDays", target: 3, period: "week" } }),
   quest({ id: "weekly-active-5", title: "5 активных дней", description: "5 дней с Coding XP за неделю.", category: "consistency", difficulty: "normal", target: 5, unit: "count", rewardAdventureXp: 120, condition: { kind: "activeDays", target: 5, period: "week" } }),
+  quest({ id: "weekly-active-7", title: "No-zero week", description: "7 активных дней за неделю.", category: "consistency", difficulty: "epic", target: 7, unit: "count", rewardAdventureXp: 220, condition: { kind: "activeDays", target: 7, period: "week" } }),
+  quest({ id: "weekly-coding-minutes-300", title: "300 минут кодинга", description: "300 минут WakaTime coding за неделю.", category: "time", difficulty: "normal", target: 300, unit: "minutes", rewardAdventureXp: 120, condition: { kind: "codingMinutes", target: 300, period: "week" } }),
+  quest({ id: "weekly-coding-minutes-600", title: "600 минут кодинга", description: "600 минут WakaTime coding за неделю.", category: "time", difficulty: "hard", target: 600, unit: "minutes", rewardAdventureXp: 190, condition: { kind: "codingMinutes", target: 600, period: "week" } }),
   quest({ id: "weekly-coding-xp-600", title: "600 Coding XP", description: "600 честного WakaTime XP за неделю.", category: "time", difficulty: "hard", target: 600, unit: "xp", rewardAdventureXp: 160, condition: { kind: "codingXp", target: 600, period: "week" } }),
+  quest({ id: "weekly-main-language-100", title: "100 минут main language", description: "100 минут в главном языке недели.", category: "language", difficulty: "normal", target: 100, unit: "minutes", rewardAdventureXp: 95, condition: { kind: "mainLanguageMinutes", target: 100, period: "week" } }),
+  quest({ id: "weekly-main-language-200", title: "200 минут main language", description: "200 минут в главном языке недели.", category: "language", difficulty: "hard", target: 200, unit: "minutes", rewardAdventureXp: 140, condition: { kind: "mainLanguageMinutes", target: 200, period: "week" } }),
   quest({ id: "weekly-python-300", title: "300 минут Python", description: "300 минут Python за неделю.", category: "language", difficulty: "hard", target: 300, unit: "minutes", rewardAdventureXp: 150, condition: { kind: "languageMinutes", language: "Python", target: 300, period: "week" } }),
   quest({ id: "weekly-stepik-10", title: "10 задач Stepik", description: "10 Stepik-задач за неделю.", category: "stepik", difficulty: "hard", target: 10, unit: "tasks", rewardAdventureXp: 150, condition: { kind: "stepikTasks", target: 10, period: "week" } }),
   quest({ id: "weekly-pomodoro-5", title: "5 Pomodoro", description: "5 focus-сессий за неделю.", category: "pomodoro", difficulty: "normal", target: 5, unit: "sessions", rewardAdventureXp: 90, condition: { kind: "pomodoroFocus", target: 5, period: "week" } }),
+  quest({ id: "weekly-pomodoro-7", title: "7 Pomodoro", description: "7 focus-сессий за неделю.", category: "pomodoro", difficulty: "hard", target: 7, unit: "sessions", rewardAdventureXp: 130, condition: { kind: "pomodoroFocus", target: 7, period: "week" } }),
   quest({ id: "weekly-notes-3", title: "3 заметки", description: "3 дневниковые заметки за неделю.", category: "journal", difficulty: "easy", target: 3, unit: "notes", rewardAdventureXp: 70, condition: { kind: "journalNotes", target: 3, period: "week" } }),
   quest({ id: "weekly-deep-focus-2", title: "2 дня deep focus", description: "2 дня с фокусом 80%+.", category: "language", difficulty: "normal", target: 2, unit: "count", rewardAdventureXp: 110, condition: { kind: "focusDays", target: 2, minPercent: 80, period: "week" } }),
   quest({ id: "weekly-boss-progress", title: "1 boss progress", description: "Продвинуть активного босса.", category: "bossPrep", difficulty: "normal", target: 1, unit: "count", rewardAdventureXp: 120, condition: { kind: "bossProgress", target: 1 } }),

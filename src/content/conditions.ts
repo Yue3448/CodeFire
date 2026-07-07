@@ -6,6 +6,7 @@ export type CodeFireCondition =
   | { kind: "activeDays"; target: number; period?: "week" | "all" }
   | { kind: "languageMinutes"; language: string; target: number; period?: CodeFirePeriod }
   | { kind: "languageXp"; language: string; target: number; period?: CodeFirePeriod }
+  | { kind: "languageCount"; target: number; minXp?: number; minMinutes?: number; period?: CodeFirePeriod }
   | { kind: "mainLanguageMinutes"; target: number; period?: CodeFirePeriod }
   | { kind: "focusPercent"; target: number; period?: "day" | "week" | "all" }
   | { kind: "focusDays"; target: number; minPercent: number; period?: "week" | "all" }
@@ -22,6 +23,8 @@ export type CodeFireCondition =
   | { kind: "bossActive"; target?: number }
   | { kind: "bossProgress"; target: number }
   | { kind: "bossDefeated"; target: number; difficulty?: "easy" | "normal" | "hard" | "epic" | "legendary"; bossId?: string }
+  | { kind: "questsCompleted"; target: number; period?: "day" | "week"; includeWeekly?: boolean }
+  | { kind: "allQuestsCompleted"; period?: "day" | "week" }
   | { kind: "inventoryItems"; target: number; rarity?: "common" | "rare" | "epic" | "legendary" | "mythic"; equipped?: boolean }
   | { kind: "achievementsUnlocked"; target: number; rarity?: "common" | "rare" | "epic" | "legendary" | "mythic" }
   | { kind: "seasonLevel"; target: number }

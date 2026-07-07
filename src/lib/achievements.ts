@@ -31,6 +31,8 @@ export function getAchievements(
     stepikEntries?: StepikEntry[];
     topics?: TopicProgress[];
     achievements?: Achievement[];
+    quests?: ConditionProgressContext["quests"];
+    weeklyQuests?: ConditionProgressContext["weeklyQuests"];
     inventoryItems?: ConditionProgressContext["inventoryItems"];
     seasonLevel?: number;
     seasonXp?: number;
@@ -52,6 +54,8 @@ export function getAchievements(
     stepikEntries: options.stepikEntries,
     topics: options.topics,
     achievements: options.achievements,
+    quests: options.quests,
+    weeklyQuests: options.weeklyQuests,
     inventoryItems: options.inventoryItems,
     seasonLevel: options.seasonLevel,
     seasonXp: options.seasonXp,
