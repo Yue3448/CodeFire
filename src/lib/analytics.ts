@@ -82,6 +82,44 @@ export type YearSummary = AnalyticsSummary & {
   } | null;
 };
 
+export type HeatmapInsight = {
+  activityDensity: {
+    activeDays: number;
+    totalDays: number;
+    percent: number;
+  };
+  mostActiveWeekday: {
+    day: string;
+    seconds: number;
+  } | null;
+  weekendVsWeekdays: {
+    weekdaysSeconds: number;
+    weekendSeconds: number;
+  };
+  lastActiveDate: string | null;
+  currentMonth: {
+    activeDays: number;
+    seconds: number;
+  } | null;
+  longestInactiveGapDays: number;
+  consistencyScore: number;
+};
+
+export type TopDay = {
+  date: string;
+  seconds: number;
+  xp: number;
+  mainLanguage: string | null;
+  project: string | null;
+};
+
+export type TopDaysSummary = {
+  bestDay: TopDay | null;
+  averageTopDaySeconds: number;
+  topLanguage: string | null;
+  topDays: TopDay[];
+};
+
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const mondayFirstWeekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -214,6 +252,89 @@ export function calculateYearSummary(days: DailyCodingActivity[]): YearSummary {
     currentStreak: calculateCurrentStreak(days),
     bestStreak: calculateBestStreak(days),
     bestMonth: bestMonthEntry ? { label: monthLabel(bestMonthEntry[0]), seconds: bestMonthEntry[1] } : null,
+  };
+}
+
+export function calculateHeatmapInsights(days: DailyCodingActivity[]): HeatmapInsight {
+  const sortedDays = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const activeDays = sortedDays.filter((day) => getSeconds(day) > 0);
+  const weekdayStats = calculateWeekdayStats(sortedDays);
+  const mostActiveWeekday = weekdayStats.filter((day) => day.seconds > 0).toSorted((a, b) => b.seconds - a.seconds)[0] ?? null;
+  const lastDay = sortedDays.at(-1) ?? null;
+  const currentMonthKey = lastDay?.date.slice(0, 7) ?? null;
+  const currentMonthDays = currentMonthKey ? sortedDays.filter((day) => day.date.startsWith(currentMonthKey)) : [];
+  let longestInactiveGapDays = 0;
+  let currentInactiveGapDays = 0;
+  let weekdaysSeconds = 0;
+  let weekendSeconds = 0;
+
+  for (const day of sortedDays) {
+    const seconds = getSeconds(day);
+    const weekday = new Date(`${day.date}T00:00:00`).getDay();
+
+    if (weekday === 0 || weekday === 6) {
+      weekendSeconds += seconds;
+    } else {
+      weekdaysSeconds += seconds;
+    }
+
+    if (seconds > 0) {
+      longestInactiveGapDays = Math.max(longestInactiveGapDays, currentInactiveGapDays);
+      currentInactiveGapDays = 0;
+    } else {
+      currentInactiveGapDays += 1;
+    }
+  }
+
+  longestInactiveGapDays = Math.max(longestInactiveGapDays, currentInactiveGapDays);
+
+  return {
+    activityDensity: {
+      activeDays: activeDays.length,
+      totalDays: sortedDays.length,
+      percent: sortedDays.length > 0 ? Math.round((activeDays.length / sortedDays.length) * 100) : 0,
+    },
+    mostActiveWeekday: mostActiveWeekday ? { day: mostActiveWeekday.weekday, seconds: mostActiveWeekday.seconds } : null,
+    weekendVsWeekdays: {
+      weekdaysSeconds,
+      weekendSeconds,
+    },
+    lastActiveDate: activeDays.at(-1)?.date ?? null,
+    currentMonth: currentMonthKey
+      ? {
+          activeDays: currentMonthDays.filter((day) => getSeconds(day) > 0).length,
+          seconds: currentMonthDays.reduce((sum, day) => sum + getSeconds(day), 0),
+        }
+      : null,
+    longestInactiveGapDays,
+    consistencyScore: sortedDays.length > 0 ? Math.round((activeDays.length / sortedDays.length) * 100) : 0,
+  };
+}
+
+export function calculateTopDays(days: DailyCodingActivity[], limit = 7): TopDaysSummary {
+  const topDays = [...days]
+    .filter((day) => getSeconds(day) > 0)
+    .sort((a, b) => getSeconds(b) - getSeconds(a) || b.date.localeCompare(a.date))
+    .slice(0, limit)
+    .map<TopDay>((day) => ({
+      date: day.date,
+      seconds: getSeconds(day),
+      xp: getXp(day),
+      mainLanguage: day.languages.find((language) => !isExcludedLanguage(language.name))?.name ?? day.languages[0]?.name ?? null,
+      project: day.projects?.[0]?.name ?? null,
+    }));
+  const languageTotals = new Map<string, number>();
+
+  for (const day of topDays) {
+    if (!day.mainLanguage) continue;
+    languageTotals.set(day.mainLanguage, (languageTotals.get(day.mainLanguage) ?? 0) + day.seconds);
+  }
+
+  return {
+    bestDay: topDays[0] ?? null,
+    averageTopDaySeconds: topDays.length > 0 ? topDays.reduce((sum, day) => sum + day.seconds, 0) / topDays.length : 0,
+    topLanguage: getMainLanguageFromTotals(languageTotals) ?? topDays[0]?.mainLanguage ?? null,
+    topDays,
   };
 }
 

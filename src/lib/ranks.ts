@@ -22,6 +22,15 @@ export type RankProgression = {
   isMaxRank: boolean;
 };
 
+export type RankGuideItem = {
+  name: string;
+  xpRequired: number;
+  medalImage: string;
+  approxCodingTimeMinutes: number;
+  description?: string;
+  rank: Rank;
+};
+
 const ranks: Rank[] = [
   {
     id: "spark",
@@ -207,6 +216,28 @@ const ranks: Rank[] = [
 
 export function getAllRanks() {
   return [...ranks];
+}
+
+export function formatXpToCodingTime(xp: number) {
+  const minutes = Math.max(0, Math.round(xp));
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours === 0) return `${minutes} мин`;
+  if (remainingMinutes === 0) return `${hours} ч`;
+
+  return `${hours} ч ${remainingMinutes} мин`;
+}
+
+export function getGlobalRankGuide(): RankGuideItem[] {
+  return ranks.map((rank) => ({
+    name: rank.name,
+    xpRequired: rank.minXp,
+    medalImage: rank.badgeImage ?? "",
+    approxCodingTimeMinutes: rank.minXp,
+    description: rank.shortDescription,
+    rank,
+  }));
 }
 
 export function getCurrentRank(totalXp: number) {

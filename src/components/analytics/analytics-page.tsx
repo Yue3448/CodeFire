@@ -1,15 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BarChart3,
   CalendarDays,
+  Code2,
   Flame,
-  Gauge,
   Layers3,
   LineChart as LineChartIcon,
+  Medal,
   PieChart as PieChartIcon,
   Table2,
   Trophy,
@@ -31,26 +33,31 @@ import {
 } from "recharts";
 import { PageHeader } from "@/components/layout/page-header";
 import { YearlyHeatmap } from "@/components/heatmap/yearly-heatmap";
-import { Card, CardTitle, EmptyState, ErrorState, LoadingState, Metric, useRemoteData } from "@/components/pages/page-kit";
+import { Card, CardTitle, EmptyState, ErrorState, LoadingState, Metric, ProgressBar, useRemoteData } from "@/components/pages/page-kit";
 import {
   calculateActivityDistribution,
   calculateAnalyticsSummary,
   calculateLanguageBreakdown,
   calculateProjectBreakdown,
   calculateRecords,
+  calculateTopDays,
   calculateWeekdayStats,
   calculateWeeklyComparison,
   calculateYearSummary,
   filterAnalyticsDays,
   formatAnalyticsDuration,
-  generateAnalyticsInsights,
   type ActivityDistributionItem,
   type AnalyticsMetric,
   type AnalyticsPeriod,
   type LanguageStat,
   type ProjectStat,
+  type TopDay,
+  type TopDaysSummary,
   type WeekdayStat,
 } from "@/lib/analytics";
+import { getLanguageIcon, type LanguageIcon } from "@/lib/language-icons";
+import { getLanguageLevels, type LanguageLevel } from "@/lib/language-levels";
+import { formatXpToCodingTime, getGlobalRankGuide, type Rank, type RankGuideItem } from "@/lib/ranks";
 import type { CodeFireData, DailyCodingActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +76,10 @@ type DailyChartPoint = {
   value: number;
   language: string;
   active: boolean;
+};
+
+type TopDayChartPoint = TopDay & {
+  label: string;
 };
 
 type TooltipContentProps<T> = {
@@ -188,6 +199,24 @@ function DailyTooltip({ active, payload, metric }: TooltipContentProps<DailyChar
   );
 }
 
+function TopDayTooltip({ active, payload }: TooltipContentProps<TopDayChartPoint>) {
+  const point = payload?.[0]?.payload;
+
+  if (!active || !point) return null;
+
+  return (
+    <div className="rounded-lg border border-orange-300/25 bg-[#08100d]/95 p-3 text-xs shadow-2xl">
+      <div className="font-black text-white">{point.date}</div>
+      <div className="mt-2 grid gap-1 text-zinc-300">
+        <span>Coding time: {formatAnalyticsDuration(point.seconds)}</span>
+        <span>XP: {formatNumber(point.xp)}</span>
+        <span>Main language: {point.mainLanguage ?? "No data"}</span>
+        {point.project ? <span>Project: {point.project}</span> : null}
+      </div>
+    </div>
+  );
+}
+
 function NameValueTooltip({
   active,
   payload,
@@ -222,7 +251,7 @@ function SectionHeader({ icon: Icon, title, meta }: { icon: LucideIcon; title: s
   );
 }
 
-function YearSummaryPanel({ days }: { days: DailyCodingActivity[] }) {
+function HeatmapStatsGrid({ days }: { days: DailyCodingActivity[] }) {
   const summary = useMemo(() => calculateYearSummary(days), [days]);
   const rows = [
     ["Total time", formatAnalyticsDuration(summary.totalSeconds)],
@@ -236,20 +265,18 @@ function YearSummaryPanel({ days }: { days: DailyCodingActivity[] }) {
   ];
 
   return (
-    <aside className="glow-card min-w-0 rounded-lg p-4 sm:p-5">
-      <CardTitle icon={Gauge} label="Year Summary" />
-      <div className="grid gap-2">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-            <span className="min-w-0 break-words text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500">{label}</span>
-            <span className="max-w-[58%] break-words text-right text-sm font-black text-zinc-100">{value}</span>
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {rows.map(([label, value]) => (
+        <div key={label} className="min-w-0 rounded-lg border border-white/10 bg-black/25 px-3 py-2.5">
+          <div className="break-words text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">{label}</div>
+          <div className="mt-1 break-words text-sm font-black leading-tight text-zinc-100 sm:text-base">
+            {value}
           </div>
-        ))}
-      </div>
-    </aside>
+        </div>
+      ))}
+    </div>
   );
 }
-
 function LanguageBreakdown({
   stats,
   selectedLanguage,
@@ -468,6 +495,245 @@ function ActivityDistribution({ stats }: { stats: ActivityDistributionItem[] }) 
   );
 }
 
+const PYTHON_LANGUAGE_LOGO_SRC = "/languages/python_logo_clean.png";
+
+function isPythonLanguage(language: string) {
+  return language.trim().toLowerCase() === "python";
+}
+
+function AnalyticsLanguageLogo({ icon, language }: { icon?: LanguageIcon; language: string }) {
+  if (isPythonLanguage(language)) {
+    return (
+      <span className="relative block h-10 w-10 shrink-0 overflow-hidden" title="Python">
+        <Image
+          src={PYTHON_LANGUAGE_LOGO_SRC}
+          alt=""
+          width={40}
+          height={40}
+          sizes="40px"
+          className="h-full w-full object-contain"
+          draggable={false}
+          aria-hidden="true"
+        />
+      </span>
+    );
+  }
+
+  if (!icon) {
+    return null;
+  }
+
+  return (
+    <span
+      className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg border text-xs font-black"
+      style={{
+        color: icon.foreground,
+        background: icon.background,
+        borderColor: icon.borderColor,
+        boxShadow: `0 0 14px ${icon.shadowColor}`,
+      }}
+      title={icon.name}
+    >
+      {icon.imageSrc ? (
+        <Image src={icon.imageSrc} alt="" width={40} height={40} sizes="40px" className="h-full w-full object-contain p-1" draggable={false} aria-hidden="true" />
+      ) : (
+        <span className="px-1 text-center leading-none">{icon.shortLabel}</span>
+      )}
+    </span>
+  );
+}
+
+function AnalyticsRankMedal({ rank }: { rank: Rank }) {
+  if (rank.badgeImage) {
+    return (
+      <span
+        className="relative block h-9 w-9 shrink-0 overflow-hidden"
+        style={{ filter: `drop-shadow(0 0 9px ${rank.glowColor})` }}
+        title={rank.name}
+      >
+        <Image
+          src={rank.badgeImage}
+          alt=""
+          width={36}
+          height={36}
+          sizes="36px"
+          className="h-full w-full scale-110 object-contain"
+          draggable={false}
+          aria-hidden="true"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-md border bg-black/25 text-xs font-black text-orange-100"
+      style={{ borderColor: rank.accentColor, boxShadow: `0 0 9px ${rank.glowColor}` }}
+      aria-hidden="true"
+    >
+      {rank.medalIcon}
+    </span>
+  );
+}
+
+function LanguageLevelCard({ level }: { level: LanguageLevel }) {
+  const icon = isPythonLanguage(level.name) ? undefined : getLanguageIcon(level.name);
+  const currentRank = level.rankProgress.currentRank;
+  const nextRank = level.rankProgress.nextRank;
+  const xpToNextLevel = Math.max(0, level.nextLevelXp - level.xp);
+
+  return (
+    <div className="min-w-0 rounded-lg border border-white/10 bg-black/25 p-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <AnalyticsLanguageLogo icon={icon} language={level.name} />
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="break-words text-sm font-black leading-tight text-white">{level.name}</div>
+            <div className="mt-1 text-xs font-semibold text-zinc-500">{formatNumber(level.xp)} XP языка</div>
+          </div>
+          <span className="shrink-0 rounded-full border border-orange-300/25 bg-orange-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-orange-100">
+            Level {level.level}
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="mt-2 w-fit max-w-full rounded-full border px-2 py-0.5 text-[11px] font-black leading-tight text-white sm:ml-[52px]"
+        style={{
+          borderColor: currentRank.accentColor,
+          background: `${currentRank.accentColor}1A`,
+          boxShadow: `0 0 10px ${currentRank.glowColor}`,
+        }}
+        title={currentRank.shortDescription}
+      >
+        {currentRank.badge} · {currentRank.name}
+      </div>
+
+      <div className="mt-3 grid gap-2">
+        <ProgressBar percent={level.progressPercent} label="До следующего уровня" meta={`${formatNumber(xpToNextLevel)} XP`} />
+        <ProgressBar
+          percent={level.rankProgress.progressPercent}
+          label={nextRank ? `До ранга: ${nextRank.name}` : "Максимальный ранг языка"}
+          meta={nextRank ? `${formatNumber(level.rankProgress.xpToNextRank)} XP` : `${formatNumber(level.rankProgress.xpIntoRank)} XP`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RankGuideRow({ item }: { item: RankGuideItem }) {
+  return (
+    <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-white/5 px-1 py-2.5 last:border-b-0">
+      <AnalyticsRankMedal rank={item.rank} />
+      <div className="min-w-0">
+        <div className="break-words text-xs font-black leading-tight text-zinc-100">{item.name}</div>
+        {item.description ? <div className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-zinc-500">{item.description}</div> : null}
+      </div>
+      <div className="min-w-[86px] text-right">
+        <div className="text-xs font-black text-orange-100">{formatNumber(item.xpRequired)} XP</div>
+        <div className="text-[11px] font-semibold text-zinc-500">~{formatXpToCodingTime(item.approxCodingTimeMinutes)}</div>
+      </div>
+    </div>
+  );
+}
+
+function LanguageRanksPanel({ days, periodLabel }: { days: DailyCodingActivity[]; periodLabel: string }) {
+  const languageLevels = useMemo(() => getLanguageLevels(days), [days]);
+  const rankGuide = useMemo(() => getGlobalRankGuide(), []);
+
+  return (
+    <Card className="flex min-h-[520px] flex-col">
+      <SectionHeader icon={Code2} title="Language Levels" meta={periodLabel} />
+      {languageLevels.length === 0 ? (
+        <EmptyState>No programming language XP found for this period.</EmptyState>
+      ) : (
+        <div className="grid gap-2">
+          {languageLevels.map((level) => (
+            <LanguageLevelCard key={level.name} level={level} />
+          ))}
+        </div>
+      )}
+
+      <div className="mt-5 min-h-0 flex-1 border-t border-white/10 pt-4">
+        <SectionHeader icon={Medal} title="Rank & Medal Guide" meta="1 XP = 1 min" />
+        <div className="max-h-[330px] min-h-[240px] overflow-y-auto pr-1">
+          {rankGuide.map((item) => (
+            <RankGuideRow key={item.rank.id} item={item} />
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function TopDaysPanel({ summary }: { summary: TopDaysSummary }) {
+  const chartData = summary.topDays.map((day) => ({ ...day, label: day.date.slice(5) }));
+  const hasProjectColumn = summary.topDays.some((day) => day.project);
+
+  return (
+    <Card>
+      <SectionHeader icon={Table2} title="Top Days" meta="Best coding days" />
+      {summary.topDays.length === 0 ? (
+        <EmptyState>No active coding days found for this period.</EmptyState>
+      ) : (
+        <div className="grid gap-4">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <CompactStat label="Best day" value={summary.bestDay ? formatAnalyticsDuration(summary.bestDay.seconds) : "No data"} hint={summary.bestDay?.date} />
+            <CompactStat label="Avg top-day length" value={formatAnalyticsDuration(summary.averageTopDaySeconds)} hint={`${summary.topDays.length} days`} />
+            <CompactStat label="Top language" value={summary.topLanguage ?? "No data"} hint="Among top days" />
+          </div>
+
+          <div className="h-[150px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ left: -18, right: 6, top: 8, bottom: 0 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.07)" vertical={false} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#a1a1aa", fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickFormatter={(value: number) => formatAxisValue(value / 3600, "time")} />
+                <Tooltip content={<TopDayTooltip />} />
+                <Bar dataKey="seconds" radius={[5, 5, 0, 0]}>
+                  {chartData.map((day, index) => (
+                    <Cell key={day.date} fill={index === 0 ? "#ffb347" : "#59ff91"} opacity={index === 0 ? 1 : 0.78} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="min-w-0 overflow-x-auto">
+            <table className={cn("w-full text-left text-xs", hasProjectColumn ? "min-w-[560px]" : "min-w-[460px]")}>
+              <thead className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+                <tr className="border-b border-white/10">
+                  <th className="py-2 pr-3">Date</th>
+                  <th className="py-2 pr-3">Coding time</th>
+                  <th className="py-2 pr-3">XP</th>
+                  <th className="py-2 pr-3">Main language</th>
+                  {hasProjectColumn ? <th className="py-2">Project</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {summary.topDays.map((day, index) => (
+                  <tr key={day.date} className="border-b border-white/5 text-zinc-300 transition-colors hover:bg-white/5">
+                    <td className="py-2 pr-3 font-bold text-zinc-100">
+                      <span className="inline-flex items-center gap-2">
+                        {index === 0 ? <span className="rounded-full border border-orange-300/30 bg-orange-300/10 px-2 py-0.5 text-[10px] text-orange-100">top 1</span> : null}
+                        {day.date}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3">{formatAnalyticsDuration(day.seconds)}</td>
+                    <td className="py-2 pr-3">{formatNumber(day.xp)}</td>
+                    <td className="py-2 pr-3">{day.mainLanguage ?? "No data"}</td>
+                    {hasProjectColumn ? <td className="py-2">{day.project ?? "No data"}</td> : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export function AnalyticsPage() {
   const state = useRemoteData<AnalyticsPayload>("/api/analytics");
 
@@ -493,10 +759,7 @@ function AnalyticsContent({ data }: { data: AnalyticsPayload }) {
   const distribution = useMemo(() => calculateActivityDistribution(filteredDays), [filteredDays]);
   const records = useMemo(() => calculateRecords(filteredDays), [filteredDays]);
   const weeklyComparison = useMemo(() => calculateWeeklyComparison(allDays), [allDays]);
-  const insights = useMemo(
-    () => generateAnalyticsInsights({ days: filteredDays, summary, languageStats, weekdayStats, weeklyComparison }),
-    [filteredDays, languageStats, summary, weekdayStats, weeklyComparison],
-  );
+  const topDaysSummary = useMemo(() => calculateTopDays(filteredDays, 7), [filteredDays]);
   const selectedPeriodLabel = periodOptions.find((item) => item.value === period)?.label ?? "Period";
   const metricLabel = metric === "time" ? "Coding time" : "XP";
   const hasActivity = summary.totalSeconds > 0;
@@ -505,10 +768,7 @@ function AnalyticsContent({ data }: { data: AnalyticsPayload }) {
     <div className="grid gap-5">
       <PageHeader eyebrow="Analytics" title="Signals And Charts" description="Deep coding analytics from WakaTime activity and local CodeFire history." />
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <YearlyHeatmap days={allDays} />
-        <YearSummaryPanel days={allDays} />
-      </section>
+      <YearlyHeatmap days={allDays} footer={<HeatmapStatsGrid days={allDays} />} />
 
       <section className="grid gap-4">
         <div className="flex min-w-0 flex-wrap items-end justify-between gap-4">
@@ -623,9 +883,10 @@ function AnalyticsContent({ data }: { data: AnalyticsPayload }) {
           <ProjectsBreakdown stats={projectStats} />
           <WeekdayAnalysis stats={weekdayStats} />
           <ActivityDistribution stats={distribution} />
+          <LanguageRanksPanel days={filteredDays} periodLabel={selectedPeriodLabel} />
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[1fr_0.95fr_1.05fr]">
+        <section className="grid gap-4 xl:grid-cols-[0.9fr_0.9fr_1.25fr]">
           <Card>
             <SectionHeader icon={Trophy} title="Records" />
             {records.length > 0 ? (
@@ -658,21 +919,7 @@ function AnalyticsContent({ data }: { data: AnalyticsPayload }) {
             )}
           </Card>
 
-          <Card>
-            <SectionHeader icon={Table2} title="Insights" />
-            {insights.length > 0 ? (
-              <div className="grid gap-2">
-                {insights.map((insight) => (
-                  <div key={insight.title} className="rounded-lg border border-white/10 bg-black/20 p-3">
-                    <div className="text-xs font-black uppercase tracking-[0.14em] text-orange-200">{insight.title}</div>
-                    <p className="mt-1 text-sm leading-6 text-zinc-300">{insight.detail}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState>No insights yet. More tracked coding days will unlock better signals.</EmptyState>
-            )}
-          </Card>
+          <TopDaysPanel summary={topDaysSummary} />
         </section>
       </section>
     </div>

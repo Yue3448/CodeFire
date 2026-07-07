@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { DayStat } from "@/lib/types";
 import { formatHours } from "@/lib/format";
 import { HEATMAP_LEGEND_XP_VALUES, getHeatmapIntensityClass } from "@/lib/heatmap-scale";
@@ -69,9 +70,11 @@ function getMonthMarkers(days: DayStat[]) {
 
 export function YearlyHeatmap({
   days,
+  footer,
   onSelectDay,
 }: {
   days: DayStat[];
+  footer?: ReactNode;
   onSelectDay?: (date: string) => void;
 }) {
   const weeks = buildWeeks(days);
@@ -175,6 +178,8 @@ export function YearlyHeatmap({
         </div>
         <span>Жарче</span>
       </div>
+
+      {footer ? <div className="mt-5 border-t border-white/10 pt-4">{footer}</div> : null}
     </article>
   );
 }
