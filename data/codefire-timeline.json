@@ -3,11 +3,31 @@
   "events": [
     {
       "id": "current-rank",
-      "date": "2026-07-07",
+      "date": "2026-07-08",
       "type": "rank",
       "title": "Текущий ранг: Подмастерье",
       "icon": "🏅",
       "rarity": "rare"
+    },
+    {
+      "id": "achievement:streak-3",
+      "date": "2026-07-08",
+      "type": "achievement",
+      "title": "3 дней подряд",
+      "description": "Поддержать серию 3 активных дней.",
+      "icon": "ST",
+      "rarity": "rare",
+      "sourceId": "streak-3"
+    },
+    {
+      "id": "item:novice-frame",
+      "date": "2026-07-08",
+      "type": "item",
+      "title": "Рамка новичка",
+      "description": "Простая рамка для первых дней.",
+      "icon": "NF",
+      "rarity": "common",
+      "sourceId": "novice-frame"
     },
     {
       "id": "achievement:streak-recovered",
@@ -694,5 +714,5 @@
       "sourceId": "special-peak-focus"
     }
   ],
-  "updatedAt": "2026-07-07T21:18:02.440Z"
+  "updatedAt": "2026-07-07T21:21:42.788Z"
 }

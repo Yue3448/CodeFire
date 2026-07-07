@@ -48,6 +48,10 @@
     "season-frame": {
       "unlockedAt": "2026-07-07T09:49:21.175Z",
       "source": "season"
+    },
+    "novice-frame": {
+      "unlockedAt": "2026-07-08T00:00:00.000Z",
+      "source": "streak"
     }
   },
   "equipped": {
