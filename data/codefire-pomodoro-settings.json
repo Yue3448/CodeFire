@@ -1,7 +1,7 @@
 {
   "version": 1,
   "settings": {
-    "focusMinutes": 30,
+    "focusMinutes": 5,
     "shortBreakMinutes": 10,
     "longBreakMinutes": 15,
     "longBreakEvery": 4,

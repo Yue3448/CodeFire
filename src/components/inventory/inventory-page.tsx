@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Backpack, Boxes, Eye, Search, ShieldCheck, SlidersHorizontal, Zap } from "lucide-react";
+import { Backpack, Boxes, ChevronDown, Search, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardTitle, EmptyState, ErrorState, LoadingState, ProgressBar, useRemoteData } from "@/components/pages/page-kit";
 import type { InventoryItem, InventoryState } from "@/lib/inventory";
@@ -15,39 +15,36 @@ type EquipmentSlot = "artifact" | "amulet" | "ring" | "book" | "weapon" | "cloak
 type StatusFilter = "all" | "unlocked" | "locked" | "equipped";
 type TypeFilter = "all" | EquipmentSlot | "badge" | "frame" | "theme";
 type RarityFilter = "all" | InventoryItem["rarity"];
-type EffectFilter = "all" | "quest" | "pomodoro" | "language" | "recovery" | "cosmetic";
 type InventorySort = "equippedFirst" | "unlockedFirst" | "rarityDesc" | "rarityAsc" | "type" | "name" | "closestToUnlock" | "newestUnlocked";
 
 type InventoryFilters = {
   status: StatusFilter;
   type: TypeFilter;
   rarity: RarityFilter;
-  effect: EffectFilter;
   search: string;
 };
 
 const equipmentSlots = [
-  { slot: "artifact", label: "Artifact", hint: "Equip an artifact" },
-  { slot: "amulet", label: "Amulet", hint: "Equip an amulet" },
-  { slot: "ring", label: "Ring", hint: "Equip a ring" },
-  { slot: "book", label: "Book", hint: "Equip a book" },
-  { slot: "weapon", label: "Weapon", hint: "Equip a weapon" },
-  { slot: "cloak", label: "Cloak", hint: "Equip a cloak" },
-  { slot: "cosmetic", label: "Cosmetic", hint: "Equip a frame or cosmetic" },
+  { slot: "artifact", label: "Artifact", hint: "No artifact equipped" },
+  { slot: "amulet", label: "Amulet", hint: "No amulet equipped" },
+  { slot: "ring", label: "Ring", hint: "No ring equipped" },
+  { slot: "book", label: "Book", hint: "No book equipped" },
+  { slot: "weapon", label: "Weapon", hint: "No weapon equipped" },
+  { slot: "cloak", label: "Cloak", hint: "No cloak equipped" },
+  { slot: "cosmetic", label: "Cosmetic", hint: "No cosmetic equipped" },
 ] satisfies Array<{ slot: EquipmentSlot; label: string; hint: string }>;
 
 const rarityOptions = ["all", "common", "rare", "epic", "legendary", "mythic"] satisfies RarityFilter[];
-const effectOptions = ["all", "quest", "pomodoro", "language", "recovery", "cosmetic"] satisfies EffectFilter[];
 const statusOptions = ["all", "unlocked", "locked", "equipped"] satisfies StatusFilter[];
 const sortOptions = [
   ["equippedFirst", "Equipped first"],
   ["unlockedFirst", "Unlocked first"],
-  ["rarityDesc", "Rarity high to low"],
-  ["rarityAsc", "Rarity low to high"],
+  ["closestToUnlock", "Closest unlock"],
+  ["rarityDesc", "Rarity high"],
+  ["rarityAsc", "Rarity low"],
   ["type", "Type"],
   ["name", "Name A-Z"],
-  ["closestToUnlock", "Closest to unlock"],
-  ["newestUnlocked", "Newest unlocked"],
+  ["newestUnlocked", "Newest"],
 ] satisfies Array<[InventorySort, string]>;
 
 const rarityScore: Record<InventoryItem["rarity"], number> = {
@@ -96,16 +93,6 @@ function effectLabel(item: Pick<InventoryItem, "effect" | "description">) {
   return item.description;
 }
 
-function effectMatches(item: InventoryItem, effect: EffectFilter) {
-  if (effect === "all") return true;
-  if (effect === "cosmetic") return !item.effect || item.effect.kind === "cosmeticOnly";
-  if (effect === "quest") return item.effect?.kind === "questAdventureXpBoost" || item.effect?.kind === "studyTaskBoost";
-  if (effect === "pomodoro") return item.effect?.kind === "pomodoroQuestBoost";
-  if (effect === "language") return item.effect?.kind === "languageQuestBoost";
-  if (effect === "recovery") return item.effect?.kind === "recoveryBoost";
-  return true;
-}
-
 function typeMatches(item: InventoryItem, type: TypeFilter) {
   if (type === "all") return true;
   if (type === "theme") return item.type === "themeToken";
@@ -129,20 +116,12 @@ function filterItems(items: InventoryItem[], filters: InventoryFilters) {
       (filters.status === "locked" && !item.unlocked) ||
       (filters.status === "equipped" && Boolean(item.equipped));
     const rarityMatch = filters.rarity === "all" || item.rarity === filters.rarity;
-    const searchable = [
-      item.name,
-      item.description,
-      item.type,
-      item.rarity,
-      item.source,
-      item.unlockLabel,
-      effectLabel(item),
-    ]
+    const searchable = [item.name, item.description, item.type, item.rarity, item.source, item.unlockLabel, effectLabel(item)]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
 
-    return statusMatch && rarityMatch && typeMatches(item, filters.type) && effectMatches(item, filters.effect) && (!search || searchable.includes(search));
+    return statusMatch && rarityMatch && typeMatches(item, filters.type) && (!search || searchable.includes(search));
   });
 }
 
@@ -174,6 +153,30 @@ function activeEffects(inventory: InventoryState) {
 function rarityClass(item: InventoryItem) {
   if (!item.unlocked) return "border-white/10 bg-black/20 opacity-70";
   return rarityClasses[item.rarity];
+}
+
+function mergeInventory(previous: InventoryState | null, next: InventoryState): InventoryState {
+  if (!previous) return next;
+
+  const previousById = new Map(previous.items.map((item) => [item.id, item]));
+  const equippedIds = new Set(Object.values(next.equipped).filter(Boolean));
+
+  return {
+    ...next,
+    items: next.items.map((item) => {
+      const previousItem = previousById.get(item.id);
+
+      return {
+        ...previousItem,
+        ...item,
+        source: item.source ?? previousItem?.source,
+        unlockLabel: previousItem?.unlockLabel ?? item.unlockLabel,
+        unlockProgress: previousItem?.unlockProgress ?? item.unlockProgress,
+        unlockTarget: previousItem?.unlockTarget ?? item.unlockTarget,
+        equipped: equippedIds.has(item.id),
+      };
+    }),
+  };
 }
 
 function SelectControl({
@@ -223,6 +226,14 @@ function ItemIcon({ item }: { item: InventoryItem }) {
   );
 }
 
+function StatusPill({ item }: { item: InventoryItem }) {
+  return (
+    <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em]", item.equipped ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-100" : item.unlocked ? "border-sky-300/20 bg-sky-300/10 text-sky-100" : "border-white/10 bg-black/30 text-zinc-500")}>
+      {item.equipped ? "equipped" : item.unlocked ? "unlocked" : "locked"}
+    </span>
+  );
+}
+
 function EquipmentSlotCard({
   slot,
   item,
@@ -233,18 +244,17 @@ function EquipmentSlotCard({
   slot: (typeof equipmentSlots)[number];
   item: InventoryItem | null;
   onSelect: (item: InventoryItem) => void;
-  onUnequip: (item: InventoryItem) => void;
+  onUnequip: (slot: EquipmentSlot) => void;
   busy: boolean;
 }) {
   if (!item) {
     return (
       <div className="min-w-0 rounded-lg border border-dashed border-white/10 bg-black/20 p-3">
-        <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">{slot.label}</div>
-        <div className="mt-3 flex min-w-0 items-center gap-3">
+        <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-white/10 bg-black/30 text-[10px] font-black text-zinc-600">--</span>
           <div className="min-w-0">
-            <div className="text-sm font-black text-zinc-300">Empty slot</div>
-            <div className="mt-1 text-xs leading-4 text-zinc-500">{slot.hint}</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">{slot.label}</div>
+            <div className="mt-1 text-xs font-bold leading-4 text-zinc-500">{slot.hint}</div>
           </div>
         </div>
       </div>
@@ -253,23 +263,22 @@ function EquipmentSlotCard({
 
   return (
     <div className={cn("min-w-0 rounded-lg border p-3 shadow-lg", rarityClasses[item.rarity])}>
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <button type="button" onClick={() => onSelect(item)} className="flex min-w-0 flex-1 items-start gap-3 text-left">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <button type="button" onClick={() => onSelect(item)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <ItemIcon item={item} />
           <div className="min-w-0">
             <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">{slot.label}</div>
             <div className="mt-1 break-words text-sm font-black leading-tight text-white">{item.name}</div>
             <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-400">{item.rarity}</div>
-            <div className="mt-1 line-clamp-2 text-xs leading-4 text-zinc-300">{effectLabel(item)}</div>
           </div>
         </button>
         <button
           type="button"
           disabled={busy}
-          onClick={() => onUnequip(item)}
-          className="shrink-0 rounded-full border border-white/10 bg-black/25 px-2 py-1 text-[10px] font-black text-zinc-300 transition-colors hover:border-orange-300/35 hover:text-orange-100 disabled:opacity-50"
+          onClick={() => onUnequip(slot.slot)}
+          className="shrink-0 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-black text-zinc-300 transition-colors hover:border-orange-300/35 hover:text-orange-100 disabled:opacity-50"
         >
-          Unequip
+          {busy ? "..." : "Unequip"}
         </button>
       </div>
     </div>
@@ -292,22 +301,17 @@ function BuildSummary({ inventory }: { inventory: InventoryState }) {
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <SummaryCard label="Slots" value={`${inventory.stats.equipped}/${equipmentSlots.length}`} />
         <SummaryCard label="Active boost" value={boost > 0 ? `+${boost}%` : "0%"} hint="Coding XP unchanged" />
-        <SummaryCard label="Rarity score" value={`${score}`} />
+        <SummaryCard label="Rarity" value={`${score}`} hint="Equipped score" />
       </div>
-      <div className="mt-3 rounded-lg border border-white/10 bg-black/25 p-3">
-        <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Active Effects</div>
-        {effects.length > 0 ? (
-          <div className="mt-2 grid gap-1.5">
-            {effects.map(({ item, label }) => (
-              <div key={item.id} className="flex min-w-0 items-center gap-2 text-xs font-bold text-zinc-300">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-white/10 bg-black/30 text-[10px] text-white">{item.icon}</span>
-                <span className="min-w-0 break-words">{label}</span>
-              </div>
-            ))}
+      <div className="mt-3 grid gap-1.5">
+        {effects.slice(0, 3).map(({ item, label }) => (
+          <div key={item.id} className="flex min-w-0 items-center gap-2 rounded-md border border-white/10 bg-black/25 px-2 py-1.5 text-xs font-bold text-zinc-300">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-white/10 bg-black/30 text-[10px] text-white">{item.icon}</span>
+            <span className="min-w-0 break-words">{label}</span>
           </div>
-        ) : (
-          <div className="mt-2 text-xs leading-5 text-zinc-500">No active effects. 0% · Coding XP is never changed by items.</div>
-        )}
+        ))}
+        {effects.length === 0 ? <div className="rounded-md border border-white/10 bg-black/25 px-2 py-1.5 text-xs font-bold text-zinc-500">No active effects. Coding XP is unchanged.</div> : null}
+        {effects.length > 3 ? <div className="text-[11px] font-bold text-zinc-500">+{effects.length - 3} more active effects</div> : null}
       </div>
     </div>
   );
@@ -315,15 +319,15 @@ function BuildSummary({ inventory }: { inventory: InventoryState }) {
 
 function ItemCard({
   item,
-  selected,
-  onSelect,
+  expanded,
+  onToggle,
   onEquip,
   onUnequip,
   busy,
 }: {
   item: InventoryItem;
-  selected: boolean;
-  onSelect: (item: InventoryItem) => void;
+  expanded: boolean;
+  onToggle: (item: InventoryItem) => void;
   onEquip: (item: InventoryItem) => void;
   onUnequip: (item: InventoryItem) => void;
   busy: boolean;
@@ -332,39 +336,26 @@ function ItemCard({
   const percent = unlockPercent(item);
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(item)}
-      className={cn(
-        "min-w-0 rounded-lg border p-3 text-left shadow-lg transition-colors",
-        rarityClass(item),
-        selected ? "ring-1 ring-orange-300/45" : "hover:border-orange-300/35",
-      )}
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <ItemIcon item={item} />
-          <div className="min-w-0">
-            <div className="break-words text-sm font-black leading-tight text-white">{item.name}</div>
-            <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500">{item.type} · {item.rarity}</div>
+    <div className={cn("min-w-0 rounded-lg border p-3 shadow-lg transition-colors", rarityClass(item), expanded ? "ring-1 ring-orange-300/45" : "hover:border-orange-300/35")}>
+      <button type="button" onClick={() => onToggle(item)} className="w-full text-left">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <ItemIcon item={item} />
+            <div className="min-w-0">
+              <div className="break-words text-sm font-black leading-tight text-white">{item.name}</div>
+              <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                {item.type} / {item.rarity}
+              </div>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <StatusPill item={item} />
+            <ChevronDown className={cn("h-3.5 w-3.5 text-zinc-500 transition-transform", expanded ? "rotate-180" : null)} />
           </div>
         </div>
-        <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em]", item.equipped ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-100" : item.unlocked ? "border-sky-300/20 bg-sky-300/10 text-sky-100" : "border-white/10 bg-black/30 text-zinc-500")}>
-          {item.equipped ? "equipped" : item.unlocked ? "unlocked" : "locked"}
-        </span>
-      </div>
+      </button>
 
       <p className="mt-2 line-clamp-2 text-xs leading-5 text-zinc-400">{effectLabel(item)}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full border border-white/10 bg-black/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-400">
-          {slot ? `${slot} slot` : "not equipable"}
-        </span>
-        {item.source ? (
-          <span className="rounded-full border border-white/10 bg-black/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">
-            {item.source}
-          </span>
-        ) : null}
-      </div>
 
       {!item.unlocked && item.unlockTarget ? (
         <div className="mt-3">
@@ -373,139 +364,57 @@ function ItemCard({
         </div>
       ) : null}
 
+      {expanded ? (
+        <div className="mt-3 rounded-lg border border-white/10 bg-black/25 p-3">
+          <p className="text-xs leading-5 text-zinc-300">{item.description}</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <span className="rounded-full border border-white/10 bg-black/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-400">
+              {slot ? `${slot} slot` : "not equipable"}
+            </span>
+            <span className="rounded-full border border-white/10 bg-black/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+              {item.source ?? "CodeFire"}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {item.equipped ? (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(event) => {
-              event.stopPropagation();
-              onUnequip(item);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                event.stopPropagation();
-                onUnequip(item);
-              }
-            }}
-            aria-disabled={busy}
-            className="rounded-full border border-orange-300/25 bg-orange-300/10 px-3 py-1 text-[11px] font-black text-orange-100"
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onUnequip(item)}
+            className="rounded-full border border-orange-300/25 bg-orange-300/10 px-3 py-1 text-[11px] font-black text-orange-100 transition-colors hover:border-orange-300/45 disabled:opacity-50"
           >
-            Unequip
-          </span>
+            {busy ? "Unequipping..." : "Unequip"}
+          </button>
         ) : item.unlocked && canEquip(item) ? (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(event) => {
-              event.stopPropagation();
-              onEquip(item);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                event.stopPropagation();
-                onEquip(item);
-              }
-            }}
-            aria-disabled={busy}
-            className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[11px] font-black text-emerald-100"
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onEquip(item)}
+            className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[11px] font-black text-emerald-100 transition-colors hover:border-emerald-300/45 disabled:opacity-50"
           >
-            Equip
-          </span>
+            {busy ? "Equipping..." : "Equip"}
+          </button>
         ) : (
           <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[11px] font-black text-zinc-500">
             {item.unlocked ? "View" : "Locked"}
           </span>
         )}
       </div>
-    </button>
-  );
-}
-
-function DetailsPanel({
-  item,
-  onEquip,
-  onUnequip,
-  busy,
-}: {
-  item: InventoryItem | null;
-  onEquip: (item: InventoryItem) => void;
-  onUnequip: (item: InventoryItem) => void;
-  busy: boolean;
-}) {
-  if (!item) {
-    return (
-      <Card className="p-4 sm:p-5">
-        <CardTitle icon={Eye} label="Item Details" />
-        <EmptyState>Select an item to inspect effects, unlock progress, source, and equipment actions.</EmptyState>
-      </Card>
-    );
-  }
-
-  const slot = getSlotForItem(item);
-  const percent = unlockPercent(item);
-
-  return (
-    <Card className="p-4 sm:p-5 xl:sticky xl:top-4">
-      <CardTitle icon={Eye} label="Item Details" />
-      <div className={cn("rounded-lg border p-3", rarityClass(item))}>
-        <div className="flex min-w-0 items-start gap-3">
-          <ItemIcon item={item} />
-          <div className="min-w-0">
-            <div className="break-words text-lg font-black leading-tight text-white">{item.name}</div>
-            <div className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-500">{item.type} · {item.rarity}</div>
-          </div>
-        </div>
-
-        <p className="mt-3 text-sm leading-6 text-zinc-300">{item.description}</p>
-
-        <div className="mt-3 grid gap-2">
-          <SummaryCard label="Status" value={item.equipped ? "Equipped" : item.unlocked ? "Unlocked" : "Locked"} />
-          <SummaryCard label="Slot" value={slot ? slot[0].toUpperCase() + slot.slice(1) : "Not equipable"} />
-          <SummaryCard label="Effect" value={effectLabel(item)} hint="Adventure, quest, season, or cosmetic only" />
-          <SummaryCard label="Source" value={item.source ?? "CodeFire"} />
-        </div>
-
-        {!item.unlocked ? (
-          <div className="mt-3 rounded-lg border border-white/10 bg-black/25 p-3">
-            <ProgressBar percent={percent} label="Unlock progress" meta={item.unlockLabel ?? (item.unlockTarget ? `${item.unlockProgress ?? 0} / ${item.unlockTarget}` : undefined)} />
-            {item.unlockTarget ? <div className="mt-1 text-[11px] font-bold text-zinc-500">{formatNumber(Math.max(0, item.unlockTarget - (item.unlockProgress ?? 0)))} left</div> : null}
-          </div>
-        ) : null}
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {item.equipped ? (
-            <button type="button" disabled={busy} onClick={() => onUnequip(item)} className="rounded-lg border border-orange-300/25 bg-orange-300/10 px-3 py-2 text-xs font-black text-orange-100 transition-colors hover:border-orange-300/45 disabled:opacity-50">
-              Unequip
-            </button>
-          ) : item.unlocked && canEquip(item) ? (
-            <button type="button" disabled={busy} onClick={() => onEquip(item)} className="rounded-lg border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-xs font-black text-emerald-100 transition-colors hover:border-emerald-300/45 disabled:opacity-50">
-              Equip to {slot}
-            </button>
-          ) : (
-            <button type="button" disabled className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-xs font-black text-zinc-500">
-              {item.unlocked ? "Not equipable" : "Locked"}
-            </button>
-          )}
-        </div>
-
-        <div className="mt-3 rounded-lg border border-white/10 bg-black/25 p-3 text-xs leading-5 text-zinc-500">
-          Items can affect Adventure XP, quest XP, Season XP, or cosmetics. Coding XP is never changed.
-        </div>
-      </div>
-    </Card>
+    </div>
   );
 }
 
 export function InventoryPage() {
   const state = useRemoteData<InventoryPayload>("/api/inventory?progress=1");
   const [localInventory, setLocalInventory] = useState<InventoryState | null>(null);
-  const [filters, setFilters] = useState<InventoryFilters>({ status: "all", type: "all", rarity: "all", effect: "all", search: "" });
+  const [filters, setFilters] = useState<InventoryFilters>({ status: "all", type: "all", rarity: "all", search: "" });
   const [sort, setSort] = useState<InventorySort>("equippedFirst");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [busyItemId, setBusyItemId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [visibleLimit, setVisibleLimit] = useState(24);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const inventory = state.status === "ready" ? localInventory ?? state.data.inventory : null;
   const itemTypes = useMemo(() => {
@@ -517,32 +426,74 @@ export function InventoryPage() {
     () => (inventory ? sortItems(filterItems(inventory.items, filters), sort) : []),
     [filters, inventory, sort],
   );
-  const selectedItem = useMemo(() => {
-    if (!inventory) return null;
-    return inventory.items.find((item) => item.id === selectedId) ?? filteredItems[0] ?? inventory.items[0] ?? null;
-  }, [filteredItems, inventory, selectedId]);
+  const visibleItems = filteredItems.slice(0, visibleLimit);
 
-  async function mutateInventory(action: "equip" | "unequip", item: InventoryItem) {
-    setBusyItemId(item.id);
-    setSelectedId(item.id);
+  async function equipInventoryItem(item: InventoryItem) {
+    if (!item.unlocked) {
+      setActionError("Locked items cannot be equipped.");
+      return;
+    }
+
+    if (!canEquip(item)) {
+      setActionError("This item cannot be equipped.");
+      return;
+    }
+
+    setBusyKey(`equip:${item.id}`);
+    setExpandedId(item.id);
     try {
-      const response = await fetch("/api/inventory", {
+      const response = await fetch("/api/inventory/equip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, itemId: item.id }),
+        body: JSON.stringify({ itemId: item.id }),
       });
       const payload = (await response.json().catch(() => ({}))) as InventoryPayload & { error?: string };
 
-      if (!response.ok || payload.error) {
-        setActionError(payload.error ?? `Failed to ${action} item.`);
+      if (!response.ok || payload.error || !payload.inventory) {
+        setActionError(payload.error ?? "Failed to equip item.");
         return;
       }
 
       setActionError(null);
-      setLocalInventory(payload.inventory);
+      setLocalInventory((current) => mergeInventory(current ?? inventory, payload.inventory));
     } finally {
-      setBusyItemId(null);
+      setBusyKey(null);
     }
+  }
+
+  async function unequipInventorySlot(slot: EquipmentSlot, itemId?: string) {
+    setBusyKey(`unequip:${slot}`);
+    if (itemId) setExpandedId(itemId);
+
+    try {
+      const response = await fetch("/api/inventory/unequip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as InventoryPayload & { error?: string };
+
+      if (!response.ok || payload.error || !payload.inventory) {
+        setActionError(payload.error ?? "Failed to unequip item.");
+        return;
+      }
+
+      setActionError(null);
+      setLocalInventory((current) => mergeInventory(current ?? inventory, payload.inventory));
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  function unequipInventoryItem(item: InventoryItem) {
+    const slot = getSlotForItem(item);
+
+    if (!slot) {
+      setActionError("Invalid equipment slot.");
+      return;
+    }
+
+    void unequipInventorySlot(slot, item.id);
   }
 
   if (state.status === "loading") return <LoadingState label="Loading inventory..." />;
@@ -553,14 +504,14 @@ export function InventoryPage() {
   const equippedBySlot = new Map<EquipmentSlot, InventoryItem>();
 
   for (const slot of equipmentSlots) {
-    const itemId = readyInventory.equipped[slot.slot as keyof InventoryState["equipped"]];
+    const itemId = readyInventory.equipped[slot.slot];
     const item = itemId ? readyInventory.items.find((entry) => entry.id === itemId) : null;
     if (item) equippedBySlot.set(slot.slot, item);
   }
 
   return (
     <div className="grid gap-5">
-      <PageHeader eyebrow="Inventory" title="Items And Equipment" description="RPG equipment, item filters, active Adventure XP effects, and unlock progress. Items never change Coding XP." />
+      <PageHeader eyebrow="Inventory" title="Items And Equipment" description="Compact RPG equipment, item filters, active Adventure XP effects, and unlock progress. Items never change Coding XP." />
       {actionError ? <ErrorState message={actionError} /> : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -573,18 +524,18 @@ export function InventoryPage() {
       <Card className="p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle icon={ShieldCheck} label="Equipment Slots" />
-          <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-black text-zinc-400">One item per matching slot</span>
+          <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-black text-zinc-400">Fast equip, slot-based unequip</span>
         </div>
-        <div className="grid gap-3 xl:grid-cols-[1fr_360px]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
             {equipmentSlots.map((slot) => (
               <EquipmentSlotCard
                 key={slot.slot}
                 slot={slot}
                 item={equippedBySlot.get(slot.slot) ?? null}
-                onSelect={(item) => setSelectedId(item.id)}
-                onUnequip={(item) => void mutateInventory("unequip", item)}
-                busy={Boolean(busyItemId)}
+                onSelect={(item) => setExpandedId((current) => (current === item.id ? null : item.id))}
+                onUnequip={(entrySlot) => void unequipInventorySlot(entrySlot, equippedBySlot.get(entrySlot)?.id)}
+                busy={busyKey === `unequip:${slot.slot}`}
               />
             ))}
           </div>
@@ -592,73 +543,99 @@ export function InventoryPage() {
         </div>
       </Card>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Card className="p-4 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle icon={Backpack} label="All Items" />
-            <span className="text-xs font-bold text-zinc-500">{filteredItems.length} shown</span>
-          </div>
-
-          <div className="mb-4 grid gap-2">
-            <label className="relative block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-              <input
-                value={filters.search}
-                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-                placeholder="Search items..."
-                className="w-full rounded-lg border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm font-bold text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-orange-300/40"
-              />
-            </label>
-
-            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
-              <SelectControl label="Status" value={filters.status} onChange={(value) => setFilters((current) => ({ ...current, status: value as StatusFilter }))} options={statusOptions.map((value) => ({ value, label: value }))} />
-              <SelectControl label="Type" value={filters.type} onChange={(value) => setFilters((current) => ({ ...current, type: value as TypeFilter }))} options={itemTypes} />
-              <SelectControl label="Rarity" value={filters.rarity} onChange={(value) => setFilters((current) => ({ ...current, rarity: value as RarityFilter }))} options={rarityOptions.map((value) => ({ value, label: value }))} />
-              <SelectControl label="Effect" value={filters.effect} onChange={(value) => setFilters((current) => ({ ...current, effect: value as EffectFilter }))} options={effectOptions.map((value) => ({ value, label: value }))} />
-              <SelectControl label="Sort" value={sort} onChange={(value) => setSort(value as InventorySort)} options={sortOptions.map(([value, label]) => ({ value, label }))} />
-            </div>
-          </div>
-
-          {filteredItems.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-              {filteredItems.map((item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  selected={selectedItem?.id === item.id}
-                  onSelect={(entry) => setSelectedId(entry.id)}
-                  onEquip={(entry) => void mutateInventory("equip", entry)}
-                  onUnequip={(entry) => void mutateInventory("unequip", entry)}
-                  busy={busyItemId === item.id}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState>No items match the current filters.</EmptyState>
-          )}
-        </Card>
-
-        <div className="grid gap-4">
-          <Card className="p-4 sm:p-5">
-            <CardTitle icon={SlidersHorizontal} label="Rarity Breakdown" />
-            <div className="grid gap-2">
-              {rarityOptions.filter((rarity) => rarity !== "all").map((rarity) => (
-                <div key={rarity} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                  <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em]", rarityClasses[rarity])}>{rarity}</span>
-                  <span className="text-sm font-black text-white">{readyInventory.stats.byRarity[rarity]}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <DetailsPanel
-            item={selectedItem}
-            onEquip={(item) => void mutateInventory("equip", item)}
-            onUnequip={(item) => void mutateInventory("unequip", item)}
-            busy={Boolean(busyItemId)}
-          />
+      <Card className="p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle icon={Backpack} label="All Items" />
+          <span className="text-xs font-bold text-zinc-500">
+            {visibleItems.length} / {filteredItems.length} shown
+          </span>
         </div>
-      </section>
+
+        <div className="mb-4 grid gap-2">
+          <label className="relative block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <input
+              value={filters.search}
+              onChange={(event) => {
+                setVisibleLimit(24);
+                setFilters((current) => ({ ...current, search: event.target.value }));
+              }}
+              placeholder="Search items..."
+              className="w-full rounded-lg border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm font-bold text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-orange-300/40"
+            />
+          </label>
+
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+            <SelectControl
+              label="Status"
+              value={filters.status}
+              onChange={(value) => {
+                setVisibleLimit(24);
+                setFilters((current) => ({ ...current, status: value as StatusFilter }));
+              }}
+              options={statusOptions.map((value) => ({ value, label: value }))}
+            />
+            <SelectControl
+              label="Type"
+              value={filters.type}
+              onChange={(value) => {
+                setVisibleLimit(24);
+                setFilters((current) => ({ ...current, type: value as TypeFilter }));
+              }}
+              options={itemTypes}
+            />
+            <SelectControl
+              label="Rarity"
+              value={filters.rarity}
+              onChange={(value) => {
+                setVisibleLimit(24);
+                setFilters((current) => ({ ...current, rarity: value as RarityFilter }));
+              }}
+              options={rarityOptions.map((value) => ({ value, label: value }))}
+            />
+            <SelectControl
+              label="Sort"
+              value={sort}
+              onChange={(value) => {
+                setVisibleLimit(24);
+                setSort(value as InventorySort);
+              }}
+              options={sortOptions.map(([value, label]) => ({ value, label }))}
+            />
+          </div>
+        </div>
+
+        {visibleItems.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            {visibleItems.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                expanded={expandedId === item.id}
+                onToggle={(entry) => setExpandedId((current) => (current === entry.id ? null : entry.id))}
+                onEquip={(entry) => void equipInventoryItem(entry)}
+                onUnequip={unequipInventoryItem}
+                busy={busyKey === `equip:${item.id}` || busyKey === `unequip:${getSlotForItem(item) ?? ""}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState>No items match the current filters.</EmptyState>
+        )}
+
+        {filteredItems.length > visibleItems.length ? (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setVisibleLimit((current) => current + 24)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 py-2 text-xs font-black text-zinc-300 transition-colors hover:border-orange-300/35 hover:text-orange-100"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Show more
+            </button>
+          </div>
+        ) : null}
+      </Card>
 
       <div className="flex items-center gap-2 text-xs font-bold text-zinc-600">
         <Boxes className="h-3.5 w-3.5" />

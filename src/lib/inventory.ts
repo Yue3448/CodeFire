@@ -108,6 +108,10 @@ export function getSlotForItem(item: Pick<InventoryItem, "type">): InventorySlot
   return null;
 }
 
+export function isInventorySlot(value: string): value is InventorySlot {
+  return equipableSlots.includes(value as InventorySlot);
+}
+
 export function canEquipItem(item: Pick<InventoryItem, "type" | "unlocked">) {
   return item.unlocked && Boolean(getSlotForItem(item));
 }
@@ -373,6 +377,15 @@ export async function unequipItem(itemId: string) {
     }
   }
 
+  await writeInventoryFile(data);
+
+  return getInventory();
+}
+
+export async function unequipSlot(slot: InventorySlot) {
+  const data = await readInventoryFile();
+
+  delete data.equipped[slot];
   await writeInventoryFile(data);
 
   return getInventory();

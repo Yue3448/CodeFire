@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCachedFullCodeFireData } from "@/lib/codefire-cache.server";
-import { equipItem, getInventory, unequipItem, unlockItem } from "@/lib/inventory";
+import { equipItem, getInventory, isInventorySlot, unequipItem, unequipSlot, unlockItem } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -30,37 +30,34 @@ export async function POST(request: NextRequest) {
   const payload = (await request.json().catch(() => ({}))) as {
     action?: "unlock" | "equip" | "unequip";
     itemId?: string;
+    slot?: string;
     source?: string;
   };
 
-  if (!payload.itemId) {
+  if (!payload.itemId && !payload.slot) {
     return NextResponse.json({ error: "itemId is required" }, { status: 400 });
   }
 
   let inventory;
 
   if (payload.action === "unlock") {
+    if (!payload.itemId) return NextResponse.json({ error: "itemId is required" }, { status: 400 });
     inventory = await unlockItem(payload.itemId, payload.source);
   } else if (payload.action === "unequip") {
-    inventory = await unequipItem(payload.itemId);
+    if (payload.slot) {
+      if (!isInventorySlot(payload.slot)) {
+        return NextResponse.json({ error: "Invalid equipment slot." }, { status: 400 });
+      }
+      inventory = await unequipSlot(payload.slot);
+    } else {
+      if (!payload.itemId) return NextResponse.json({ error: "itemId is required" }, { status: 400 });
+      inventory = await unequipItem(payload.itemId);
+    }
   } else if (payload.action === "equip") {
+    if (!payload.itemId) return NextResponse.json({ error: "itemId is required" }, { status: 400 });
     inventory = await equipItem(payload.itemId);
   } else {
     return NextResponse.json({ error: "Unsupported inventory action." }, { status: 400 });
-  }
-
-  const apiKey = process.env.WAKATIME_API_KEY;
-
-  if (apiKey) {
-    const { data, cache } = await getCachedFullCodeFireData(apiKey, true);
-    return NextResponse.json(
-      { inventory: data.rpg?.learning.inventory ?? inventory },
-      {
-        headers: {
-          "X-CodeFire-Cache": cache,
-        },
-      },
-    );
   }
 
   return NextResponse.json({ inventory });
