@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "days": {
+    "2026-07-06": {
+      "date": "2026-07-06",
+      "enabled": true,
+      "reason": "recovery",
+      "minimumGoalMinutes": 25,
+      "noteRequired": false
+    }
+  }
+}

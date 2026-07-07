@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "goals": [
+    {
+      "id": "50184181-920a-4bf5-857e-0aa4ee4d0993",
+      "title": "90 минут Python",
+      "type": "language",
+      "target": 90,
+      "unit": "minutes",
+      "period": "day",
+      "language": "Python",
+      "active": true,
+      "createdAt": "2026-07-06T21:52:22.304Z"
+    },
+    {
+      "id": "2b5c0d0f-b163-484d-ac29-7eb54b845d8d",
+      "title": "90 минут Python",
+      "type": "language",
+      "target": 90,
+      "unit": "minutes",
+      "period": "day",
+      "language": "Python",
+      "active": false,
+      "createdAt": "2026-07-06T21:49:29.945Z",
+      "updatedAt": "2026-07-06T21:50:54.009Z"
+    }
+  ]
+}

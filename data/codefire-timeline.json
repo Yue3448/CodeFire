@@ -1,0 +1,510 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "current-rank",
+      "date": "2026-07-07",
+      "type": "rank",
+      "title": "Текущий ранг: Подмастерье",
+      "icon": "🏅",
+      "rarity": "rare"
+    },
+    {
+      "id": "achievement:streak-recovered",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "Серия восстановлена",
+      "description": "Вернуться к практике после нулевого дня.",
+      "icon": "SR",
+      "rarity": "rare",
+      "sourceId": "streak-recovered"
+    },
+    {
+      "id": "item:serpent-amulet",
+      "date": "2026-07-07",
+      "type": "item",
+      "title": "Змеиный амулет",
+      "description": "+10% Adventure XP за Python-квесты.",
+      "icon": "SA",
+      "rarity": "rare",
+      "sourceId": "serpent-amulet"
+    },
+    {
+      "id": "item:api-artifact",
+      "date": "2026-07-07",
+      "type": "item",
+      "title": "API-артефакт",
+      "description": "API progress artifact.",
+      "icon": "AA",
+      "rarity": "epic",
+      "sourceId": "api-artifact"
+    },
+    {
+      "id": "item:cloak-recovery",
+      "date": "2026-07-07",
+      "type": "item",
+      "title": "Плащ восстановления",
+      "description": "+5% Adventure XP для recovery/light day наград.",
+      "icon": "RC",
+      "rarity": "epic",
+      "sourceId": "cloak-recovery"
+    },
+    {
+      "id": "item:first-api-key",
+      "date": "2026-07-07",
+      "type": "item",
+      "title": "Ключ первого API",
+      "description": "API boss reward.",
+      "icon": "AK",
+      "rarity": "rare",
+      "sourceId": "first-api-key"
+    },
+    {
+      "id": "item:season-frame",
+      "date": "2026-07-07",
+      "type": "item",
+      "title": "Сезонная рамка",
+      "description": "Season cosmetic frame.",
+      "icon": "SF",
+      "rarity": "rare",
+      "sourceId": "season-frame"
+    },
+    {
+      "id": "achievement:python-xp-100",
+      "date": "2026-07-07",
+      "type": "achievement",
+      "title": "Python 100 XP",
+      "description": "Накопить 100 Coding XP в Python.",
+      "icon": "PY",
+      "rarity": "common",
+      "sourceId": "python-xp-100"
+    },
+    {
+      "id": "daily-120",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "120 XP за день",
+      "description": "Достичь 120 XP за один день.",
+      "icon": "✨",
+      "rarity": "rare",
+      "sourceId": "daily-120"
+    },
+    {
+      "id": "daily-180",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "180 XP за день",
+      "description": "Достичь 180 XP за один день.",
+      "icon": "✨",
+      "rarity": "rare",
+      "sourceId": "daily-180"
+    },
+    {
+      "id": "daily-240",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "240 XP за день",
+      "description": "Достичь 240 XP за один день.",
+      "icon": "🔥",
+      "rarity": "epic",
+      "sourceId": "daily-240"
+    },
+    {
+      "id": "daily-60",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "60 XP за день",
+      "description": "Достичь 60 XP за один день.",
+      "icon": "✨",
+      "rarity": "common",
+      "sourceId": "daily-60"
+    },
+    {
+      "id": "first-note",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "Первая заметка",
+      "description": "Сохранить первую заметку дня.",
+      "icon": "📝",
+      "rarity": "common",
+      "sourceId": "first-note"
+    },
+    {
+      "id": "note-2026-07-06",
+      "date": "2026-07-06",
+      "type": "note",
+      "title": "Заметка дня",
+      "description": "hard",
+      "icon": "✎"
+    },
+    {
+      "id": "python-100",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "100 XP Python",
+      "description": "Накопить 100 XP в Python.",
+      "icon": "🐍",
+      "rarity": "common",
+      "sourceId": "python-100"
+    },
+    {
+      "id": "python-hour",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "60 минут Python",
+      "description": "Один день с часом Python.",
+      "icon": "🐍",
+      "rarity": "rare",
+      "sourceId": "python-hour"
+    },
+    {
+      "id": "rank-campfire-apprentice",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "Ранг: Ученик костра",
+      "description": "Достичь ранга Ученик костра.",
+      "icon": "🏅",
+      "rarity": "common",
+      "sourceId": "rank-campfire-apprentice"
+    },
+    {
+      "id": "rank-code-novice",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "Ранг: Новичок кода",
+      "description": "Достичь ранга Новичок кода.",
+      "icon": "🏅",
+      "rarity": "common",
+      "sourceId": "rank-code-novice"
+    },
+    {
+      "id": "typescript-100",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "100 XP TypeScript",
+      "description": "Накопить 100 XP в TypeScript.",
+      "icon": "🧩",
+      "rarity": "common",
+      "sourceId": "typescript-100"
+    },
+    {
+      "id": "typescript-half-hour",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "30 минут TypeScript",
+      "description": "Один день с получасом TypeScript.",
+      "icon": "🧩",
+      "rarity": "common",
+      "sourceId": "typescript-half-hour"
+    },
+    {
+      "id": "achievement:first-note",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "Первая заметка",
+      "description": "Сохранить первую заметку.",
+      "icon": "NT",
+      "rarity": "common",
+      "sourceId": "first-note"
+    },
+    {
+      "id": "achievement:daily-xp-60",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "60 XP за день",
+      "description": "Достичь 60 Coding XP за один день.",
+      "icon": "XP",
+      "rarity": "common",
+      "sourceId": "daily-xp-60"
+    },
+    {
+      "id": "achievement:daily-xp-120",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "120 XP за день",
+      "description": "Достичь 120 Coding XP за один день.",
+      "icon": "XP",
+      "rarity": "rare",
+      "sourceId": "daily-xp-120"
+    },
+    {
+      "id": "achievement:daily-xp-180",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "180 XP за день",
+      "description": "Достичь 180 Coding XP за один день.",
+      "icon": "XP",
+      "rarity": "rare",
+      "sourceId": "daily-xp-180"
+    },
+    {
+      "id": "achievement:daily-xp-240",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "240 XP за день",
+      "description": "Достичь 240 Coding XP за один день.",
+      "icon": "XP",
+      "rarity": "epic",
+      "sourceId": "daily-xp-240"
+    },
+    {
+      "id": "achievement:daily-minutes-120",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "2 ч кодинга",
+      "description": "120 минут реальной WakaTime-активности за день.",
+      "icon": "TM",
+      "rarity": "rare",
+      "sourceId": "daily-minutes-120"
+    },
+    {
+      "id": "achievement:daily-minutes-240",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "4 ч кодинга",
+      "description": "240 минут реальной WakaTime-активности за день.",
+      "icon": "TM",
+      "rarity": "epic",
+      "sourceId": "daily-minutes-240"
+    },
+    {
+      "id": "achievement:typescript-xp-100",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "TypeScript 100 XP",
+      "description": "Накопить 100 XP в TypeScript.",
+      "icon": "TS",
+      "rarity": "common",
+      "sourceId": "typescript-xp-100"
+    },
+    {
+      "id": "achievement:journal-notes-1",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "1 заметок",
+      "description": "Собрать 1 дневниковых заметок.",
+      "icon": "JN",
+      "rarity": "common",
+      "sourceId": "journal-notes-1"
+    },
+    {
+      "id": "achievement:journal-hard-day",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "Заметка после hard day",
+      "description": "Рефлексия после тяжелого дня.",
+      "icon": "HD",
+      "rarity": "rare",
+      "sourceId": "journal-hard-day"
+    },
+    {
+      "id": "achievement:journal-max-survived",
+      "date": "2026-07-06",
+      "type": "achievement",
+      "title": "Выжил максимум",
+      "description": "Заметка с самым тяжелым настроением.",
+      "icon": "MX",
+      "rarity": "rare",
+      "sourceId": "journal-max-survived"
+    },
+    {
+      "id": "item:first-code-rune",
+      "date": "2026-07-06",
+      "type": "item",
+      "title": "Первая руна кода",
+      "description": "Знак первого устойчивого дня.",
+      "icon": "CR",
+      "rarity": "common",
+      "sourceId": "first-code-rune"
+    },
+    {
+      "id": "item:journal-feather",
+      "date": "2026-07-06",
+      "type": "item",
+      "title": "Перо заметок",
+      "description": "Косметический предмет за первые заметки.",
+      "icon": "JF",
+      "rarity": "common",
+      "sourceId": "journal-feather"
+    },
+    {
+      "id": "item:ember-badge",
+      "date": "2026-07-06",
+      "type": "item",
+      "title": "Знак уголька",
+      "description": "Badge за первый мини-ритм.",
+      "icon": "EB",
+      "rarity": "common",
+      "sourceId": "ember-badge"
+    },
+    {
+      "id": "item:typed-ring",
+      "date": "2026-07-06",
+      "type": "item",
+      "title": "Typed Ring",
+      "description": "+8% Adventure XP за TypeScript quests.",
+      "icon": "TR",
+      "rarity": "rare",
+      "sourceId": "typed-ring"
+    },
+    {
+      "id": "first-python-day",
+      "date": "2026-07-01",
+      "type": "achievement",
+      "title": "Первый Python-день",
+      "description": "Хотя бы один день с Python-активностью.",
+      "icon": "🐍",
+      "rarity": "common",
+      "sourceId": "first-python-day"
+    },
+    {
+      "id": "achievement:first-python-day",
+      "date": "2026-07-01",
+      "type": "achievement",
+      "title": "Первый Python-день",
+      "description": "Первый день с Python.",
+      "icon": "PY",
+      "rarity": "common",
+      "sourceId": "first-python-day"
+    },
+    {
+      "id": "achievement:python-main-7",
+      "date": "2026-07-01",
+      "type": "achievement",
+      "title": "7 Python-дней",
+      "description": "Семь дней с Python как главным языком.",
+      "icon": "P7",
+      "rarity": "epic",
+      "sourceId": "python-main-7"
+    },
+    {
+      "id": "daily-15",
+      "date": "2026-06-24",
+      "type": "achievement",
+      "title": "15 XP за день",
+      "description": "Достичь 15 XP за один день.",
+      "icon": "✨",
+      "rarity": "common",
+      "sourceId": "daily-15"
+    },
+    {
+      "id": "achievement:daily-xp-15",
+      "date": "2026-06-24",
+      "type": "achievement",
+      "title": "15 XP за день",
+      "description": "Достичь 15 Coding XP за один день.",
+      "icon": "XP",
+      "rarity": "common",
+      "sourceId": "daily-xp-15"
+    },
+    {
+      "id": "item:amulet-spark",
+      "date": "2026-06-24",
+      "type": "item",
+      "title": "Амулет Искры",
+      "description": "+5% Adventure XP за daily quests. Coding XP остается только WakaTime.",
+      "icon": "AI",
+      "rarity": "common",
+      "sourceId": "amulet-spark"
+    },
+    {
+      "id": "item:quiet-campfire",
+      "date": "2026-06-24",
+      "type": "item",
+      "title": "Тихий костер",
+      "description": "Light day cosmetic.",
+      "icon": "QC",
+      "rarity": "common",
+      "sourceId": "quiet-campfire"
+    },
+    {
+      "id": "first-active-day",
+      "date": "2026-06-14",
+      "type": "record",
+      "title": "Запущен CodeFire",
+      "description": "2 Coding XP",
+      "icon": "🔥",
+      "rarity": "common"
+    },
+    {
+      "id": "first-codefire-day",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Первый день CodeFire",
+      "description": "CodeFire увидел первый активный день.",
+      "icon": "✨",
+      "rarity": "common",
+      "sourceId": "first-codefire-day"
+    },
+    {
+      "id": "first-xp",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Первый XP",
+      "description": "Первый день с WakaTime XP.",
+      "icon": "🔥",
+      "rarity": "common",
+      "sourceId": "first-xp"
+    },
+    {
+      "id": "language-focus-90",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "90% фокуса",
+      "description": "Один день с 90% фокуса на одном языке.",
+      "icon": "🎯",
+      "rarity": "rare",
+      "sourceId": "language-focus-90"
+    },
+    {
+      "id": "season-start",
+      "date": "2026-06-14",
+      "type": "season",
+      "title": "Season 1: Python Foundation",
+      "description": "Активный сезон обучения",
+      "icon": "◈",
+      "rarity": "rare"
+    },
+    {
+      "id": "achievement:first-xp",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Первый XP",
+      "description": "Получить первый WakaTime Coding XP.",
+      "icon": "FX",
+      "rarity": "common",
+      "sourceId": "first-xp"
+    },
+    {
+      "id": "achievement:first-codefire-day",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Первый день CodeFire",
+      "description": "Первый активный день в CodeFire.",
+      "icon": "CD",
+      "rarity": "common",
+      "sourceId": "first-codefire-day"
+    },
+    {
+      "id": "achievement:language-focus-90",
+      "date": "2026-06-14",
+      "type": "achievement",
+      "title": "Deep focus 90%",
+      "description": "Один день с 90% фокуса на одном языке.",
+      "icon": "FC",
+      "rarity": "rare",
+      "sourceId": "language-focus-90"
+    },
+    {
+      "id": "item:small-fire-stone",
+      "date": "2026-06-14",
+      "type": "item",
+      "title": "Малый огненный камень",
+      "description": "Теплый стартовый артефакт CodeFire.",
+      "icon": "FS",
+      "rarity": "common",
+      "sourceId": "small-fire-stone"
+    }
+  ],
+  "updatedAt": "2026-07-07T13:09:29.804Z"
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "settings": {
+    "focusMinutes": 30,
+    "shortBreakMinutes": 10,
+    "longBreakMinutes": 15,
+    "longBreakEvery": 4,
+    "autoStartBreaks": false,
+    "autoStartFocus": false,
+    "soundEnabled": true
+  }
+}

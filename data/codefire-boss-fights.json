@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "bosses": [
+    {
+      "id": "3515b36e-1f22-4431-b811-0c4e22328382",
+      "presetId": "api-first",
+      "title": "Первый API",
+      "description": "Первые шаги в backend: HTTP, заметки и фокус-сессии.",
+      "topic": "HTTP",
+      "difficulty": "hard",
+      "requirements": [
+        {
+          "id": "coding-180",
+          "type": "codingMinutes",
+          "label": "180 минут кодинга",
+          "target": 180,
+          "progress": 0,
+          "completed": false
+        },
+        {
+          "id": "http-topic-160",
+          "type": "topicXp",
+          "label": "160 XP темы HTTP",
+          "target": 160,
+          "topic": "HTTP",
+          "progress": 0,
+          "completed": false
+        },
+        {
+          "id": "pomodoro-2",
+          "type": "pomodoroSessions",
+          "label": "2 Pomodoro",
+          "target": 2,
+          "progress": 0,
+          "completed": false
+        }
+      ],
+      "reward": {
+        "adventureXp": 450,
+        "itemId": "amulet-spark",
+        "title": "Первый API"
+      },
+      "completed": false,
+      "createdAt": "2026-07-06T20:37:43.260Z"
+    }
+  ]
+}

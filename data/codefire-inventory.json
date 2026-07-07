@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "unlocked": {
+    "amulet-spark": {
+      "unlockedAt": "2026-06-24T00:00:00.000Z",
+      "source": "first-coding-xp"
+    },
+    "small-fire-stone": {
+      "unlockedAt": "2026-06-14T00:00:00.000Z",
+      "source": "first-active-day"
+    },
+    "first-code-rune": {
+      "unlockedAt": "2026-07-06T00:00:00.000Z",
+      "source": "daily-xp"
+    },
+    "journal-feather": {
+      "unlockedAt": "2026-07-06T00:00:00.000Z",
+      "source": "journal"
+    },
+    "ember-badge": {
+      "unlockedAt": "2026-07-06T00:00:00.000Z",
+      "source": "coding-xp"
+    },
+    "serpent-amulet": {
+      "unlockedAt": "2026-07-07T09:49:21.175Z",
+      "source": "python"
+    },
+    "api-artifact": {
+      "unlockedAt": "2026-07-07T09:49:21.175Z",
+      "source": "boss"
+    },
+    "typed-ring": {
+      "unlockedAt": "2026-07-06T00:00:00.000Z",
+      "source": "typescript"
+    },
+    "cloak-recovery": {
+      "unlockedAt": "2026-07-07T09:49:21.175Z",
+      "source": "recovery"
+    },
+    "quiet-campfire": {
+      "unlockedAt": "2026-06-24T00:00:00.000Z",
+      "source": "recovery"
+    },
+    "first-api-key": {
+      "unlockedAt": "2026-07-07T09:49:21.175Z",
+      "source": "boss"
+    },
+    "season-frame": {
+      "unlockedAt": "2026-07-07T09:49:21.175Z",
+      "source": "season"
+    }
+  },
+  "equipped": {
+    "artifact": "small-fire-stone"
+  }
+}
