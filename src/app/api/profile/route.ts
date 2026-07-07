@@ -20,8 +20,11 @@ export async function GET() {
       generatedAt: data.generatedAt,
       progression: data.progression,
       today: data.today,
+      streak: data.rpg?.streak ?? null,
+      achievements: data.rpg?.achievements ?? [],
       records: data.rpg?.records ?? null,
       languageLevels: data.rpg?.languageLevels ?? [],
+      last365Days: data.last365Days,
       learning,
     },
     {
