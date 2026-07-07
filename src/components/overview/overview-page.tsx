@@ -26,6 +26,23 @@ type LearningBalance = {
   tone: LearningBalanceTone;
 };
 
+type MiniTrendStats = {
+  currentWeekMinutes: number;
+  previousWeekMinutes: number;
+  weekDeltaMinutes: number;
+  weekDeltaPercent: number | null;
+  activeDaysLast7: number;
+  peakDay: {
+    date: string;
+    minutes: number;
+    mainLanguage?: string;
+  } | null;
+  averageMinutesLast7: number;
+  todayVsAverageMinutes: number;
+  rhythmLabel: string;
+  rhythmTone: "neutral" | "positive" | "intense";
+};
+
 export function OverviewPage() {
   const state = useRemoteData<CodeFireOverviewData>("/api/overview");
 
@@ -44,6 +61,7 @@ export function OverviewPage() {
   const histogramDays = data.last30Days.days.slice(-7);
   const heatmapDays = data.last30Days.days.slice(-30);
   const levelXpLeft = Math.max(0, data.progression.nextLevelXP - data.progression.totalXP);
+  const miniTrendStats = calculateMiniTrendStats(data.last30Days.days);
   const learningBalance = calculateLearningBalance({
     today: data.today,
     dailyLanguages,
@@ -167,6 +185,7 @@ export function OverviewPage() {
             <MiniHistogram days={histogramDays} />
             <MiniSparkline days={chartDays} />
           </div>
+          <MiniTrendStatsPanel stats={miniTrendStats} />
           <LearningBalancePanel balance={learningBalance} />
         </Card>
       </section>
@@ -334,7 +353,7 @@ function MiniHistogram({ days }: { days: DayStat[] }) {
     <div className="relative min-w-0 rounded-lg border border-white/10 bg-black/20 p-3">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">7 Day Coding Time</div>
-        <div className="text-xs font-black text-orange-100">{formatDuration(totalSeconds)}</div>
+        <div className="text-xs font-black text-orange-100">{formatTrendSeconds(totalSeconds)}</div>
       </div>
       <div className="flex h-28 items-end gap-2">
         {days.map((day) => {
@@ -354,7 +373,7 @@ function MiniHistogram({ days }: { days: DayStat[] }) {
                     hoveredDay?.date === day.date ? "brightness-125 shadow-[0_0_16px_rgba(89,255,145,0.38)]" : "",
                   )}
                   style={{ height: `${Math.max(seconds > 0 ? 10 : 3, (seconds / maxSeconds) * 100)}%` }}
-                  aria-label={`${day.date}: ${formatDuration(seconds)}`}
+                  aria-label={`${day.date}: ${formatTrendSeconds(seconds)}`}
                 />
               </div>
               <div className="truncate text-[10px] font-bold text-zinc-500">{day.label}</div>
@@ -440,7 +459,7 @@ function MiniSparkline({ days }: { days: DayStat[] }) {
               onBlur={() => setHoveredIndex(null)}
               tabIndex={0}
               role="button"
-              aria-label={`${point.day.date}: ${formatDuration(getCodingSeconds(point.day))}`}
+              aria-label={`${point.day.date}: ${formatTrendSeconds(getCodingSeconds(point.day))}`}
             />
           </g>
         ))}
@@ -466,7 +485,7 @@ function MiniTrendTooltip({ day, className }: { day: DayStat; className?: string
       )}
     >
       <div className="font-black text-white">{day.date}</div>
-      <div className="mt-1 font-bold text-emerald-100">{formatDuration(codingSeconds)}</div>
+      <div className="mt-1 font-bold text-emerald-100">{formatTrendSeconds(codingSeconds)}</div>
       <div className="mt-1 text-zinc-400">{day.xp} XP</div>
       <div className="mt-1 break-words text-zinc-400">
         {mainLanguage ? `Main: ${mainLanguage}` : "Main: none"}
@@ -474,6 +493,95 @@ function MiniTrendTooltip({ day, className }: { day: DayStat; className?: string
       <div className={cn("mt-1 font-bold", codingSeconds > 0 ? "text-orange-100" : "text-zinc-500")}>
         {codingSeconds > 0 ? "Active day" : "Inactive day"}
       </div>
+    </div>
+  );
+}
+
+function MiniTrendStatsPanel({ stats }: { stats: MiniTrendStats }) {
+  const weekDelta = formatWeekDelta(stats);
+  const todayVsAverage = formatTodayVsAverage(stats);
+  const peakValue = stats.peakDay ? formatMinutes(stats.peakDay.minutes) : "Нет данных";
+  const peakHint = stats.peakDay
+    ? `${stats.peakDay.mainLanguage ? `${stats.peakDay.mainLanguage} · ` : ""}${stats.peakDay.date}`
+    : "за последние 7 дней";
+
+  return (
+    <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <MiniTrendMetric
+        label="Week vs prev"
+        value={weekDelta.value}
+        hint={weekDelta.hint}
+        tone={weekDelta.tone}
+        title="Coding time in the latest 7 days compared with the previous 7 days."
+      />
+      <MiniTrendMetric
+        label="Active days"
+        value={`${stats.activeDaysLast7} / 7`}
+        hint="дней с кодингом"
+        tone={stats.activeDaysLast7 >= 5 ? "positive" : "neutral"}
+        title="Days with coding time greater than zero in the latest 7 days."
+      />
+      <MiniTrendMetric
+        label="Peak"
+        value={peakValue}
+        hint={peakHint}
+        tone="positive"
+        title="Highest coding-time day in the latest 7 days."
+      />
+      <MiniTrendMetric
+        label="Today vs avg"
+        value={todayVsAverage.value}
+        hint={todayVsAverage.hint}
+        tone={todayVsAverage.tone}
+        title="Today compared with the average per day across the latest 7 days, including zero days."
+      />
+      <div
+        className={cn(
+          "min-w-0 rounded-lg border px-3 py-2 text-xs font-black sm:col-span-2 xl:col-span-4",
+          stats.rhythmTone === "positive"
+            ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100"
+            : stats.rhythmTone === "intense"
+              ? "border-orange-300/25 bg-orange-300/10 text-orange-100"
+              : "border-white/10 bg-black/20 text-zinc-300",
+        )}
+        title="Compact rhythm label based on active days, weekly volume, today versus average, and pause recovery."
+      >
+        <span className="text-zinc-500">Ритм:</span> <span className="break-words">{stats.rhythmLabel}</span>
+      </div>
+    </div>
+  );
+}
+function MiniTrendMetric({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+  title,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  tone?: "neutral" | "positive" | "negative" | "intense";
+  title: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-lg border border-white/10 bg-black/20 p-3" title={title}>
+      <div className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">{label}</div>
+      <div
+        className={cn(
+          "mt-1 break-words text-sm font-black leading-tight",
+          tone === "positive"
+            ? "text-emerald-100"
+            : tone === "negative"
+              ? "text-orange-100"
+              : tone === "intense"
+                ? "text-amber-100"
+                : "text-white",
+        )}
+      >
+        {value}
+      </div>
+      <div className="mt-1 break-words text-[11px] font-bold leading-4 text-zinc-500">{hint}</div>
     </div>
   );
 }
@@ -589,6 +697,144 @@ function getDailyLanguageBreakdown(languages: LanguageStat[]) {
   const preferredLanguages = codingLanguages.length > 0 ? codingLanguages : languages;
 
   return preferredLanguages.slice(0, 4);
+}
+
+function calculateMiniTrendStats(days: DayStat[]): MiniTrendStats {
+  const sortedDays = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const currentWeek = sortedDays.slice(-7);
+  const previousWeek = sortedDays.slice(-14, -7);
+  const currentWeekMinutes = sumCodingMinutes(currentWeek);
+  const previousWeekMinutes = sumCodingMinutes(previousWeek);
+  const weekDeltaMinutes = currentWeekMinutes - previousWeekMinutes;
+  const weekDeltaPercent =
+    previousWeekMinutes > 0 ? Math.round((weekDeltaMinutes / previousWeekMinutes) * 100) : null;
+  const activeDaysLast7 = currentWeek.filter((day) => getCodingSeconds(day) > 0).length;
+  const averageMinutesLast7 = Math.round(currentWeekMinutes / 7);
+  const today = currentWeek.at(-1) ?? null;
+  const todayMinutes = today ? Math.round(getCodingSeconds(today) / 60) : 0;
+  const peak = currentWeek
+    .map((day) => ({
+      date: day.date,
+      minutes: Math.round(getCodingSeconds(day) / 60),
+      mainLanguage: getDayMainLanguage(day) ?? undefined,
+    }))
+    .toSorted((a, b) => b.minutes - a.minutes || b.date.localeCompare(a.date))[0] ?? null;
+  const peakDay = peak && peak.minutes > 0 ? peak : null;
+  const todayVsAverageMinutes = todayMinutes - averageMinutesLast7;
+  const rhythm = getCodingRhythmLabel({
+    currentWeek,
+    currentWeekMinutes,
+    activeDaysLast7,
+    todayMinutes,
+    averageMinutesLast7,
+  });
+
+  return {
+    currentWeekMinutes,
+    previousWeekMinutes,
+    weekDeltaMinutes,
+    weekDeltaPercent,
+    activeDaysLast7,
+    peakDay,
+    averageMinutesLast7,
+    todayVsAverageMinutes,
+    rhythmLabel: rhythm.label,
+    rhythmTone: rhythm.tone,
+  };
+}
+
+function formatWeekDelta(stats: MiniTrendStats) {
+  const absDelta = Math.abs(stats.weekDeltaMinutes);
+
+  if (stats.previousWeekMinutes < 30) {
+    if (stats.currentWeekMinutes <= 0) {
+      return { value: "Недостаточно данных", hint: "к прошлой неделе", tone: "neutral" as const };
+    }
+
+    return {
+      value: stats.weekDeltaMinutes > 0 ? `+${formatMinutes(absDelta)}` : "≈ на уровне",
+      hint: stats.weekDeltaMinutes > 0 ? "к прошлой неделе" : "прошлой недели",
+      tone: "positive" as const,
+    };
+  }
+
+  const sign = stats.weekDeltaMinutes > 0 ? "+" : stats.weekDeltaMinutes < 0 ? "-" : "";
+  const percent = stats.weekDeltaPercent ?? 0;
+  const tone: "positive" | "negative" | "neutral" =
+    stats.weekDeltaMinutes > 0 ? "positive" : stats.weekDeltaMinutes < 0 ? "negative" : "neutral";
+
+  if (absDelta < 10) {
+    return { value: "≈ на уровне", hint: "прошлой недели", tone: "neutral" as const };
+  }
+
+  if (Math.abs(percent) > 999) {
+    return {
+      value: `${sign}${formatMinutes(absDelta)}`,
+      hint: "к прошлой неделе",
+      tone,
+    };
+  }
+
+  return {
+    value: `${sign}${percent}%`,
+    hint: `${sign}${formatMinutes(absDelta)} к прошлой неделе`,
+    tone,
+  };
+}
+
+function formatTodayVsAverage(stats: MiniTrendStats) {
+  if (stats.averageMinutesLast7 <= 0 && stats.currentWeekMinutes > 0) {
+    return { value: "Первый активный день", hint: "среднего пока нет", tone: "positive" as const };
+  }
+
+  if (Math.abs(stats.todayVsAverageMinutes) < 10) {
+    return { value: "≈ среднее", hint: "на уровне 7-дневного темпа", tone: "neutral" as const };
+  }
+
+  const sign = stats.todayVsAverageMinutes > 0 ? "+" : "-";
+  const tone: "positive" | "negative" = stats.todayVsAverageMinutes > 0 ? "positive" : "negative";
+
+  return {
+    value: `${sign}${formatMinutes(Math.abs(stats.todayVsAverageMinutes))}`,
+    hint: stats.todayVsAverageMinutes > 0 ? "выше среднего за 7 дней" : "ниже среднего за 7 дней",
+    tone,
+  };
+}
+
+function getCodingRhythmLabel({
+  currentWeek,
+  currentWeekMinutes,
+  activeDaysLast7,
+  todayMinutes,
+  averageMinutesLast7,
+}: {
+  currentWeek: DayStat[];
+  currentWeekMinutes: number;
+  activeDaysLast7: number;
+  todayMinutes: number;
+  averageMinutesLast7: number;
+}) {
+  const previousTwoDays = currentWeek.slice(-3, -1);
+  const returnedAfterPause =
+    todayMinutes > 0 && previousTwoDays.length > 0 && previousTwoDays.every((day) => getCodingSeconds(day) <= 0);
+
+  if (returnedAfterPause) return { label: "Возвращение после паузы", tone: "positive" as const };
+  if (todayMinutes >= Math.max(120, averageMinutesLast7 * 2)) return { label: "Пиковый день", tone: "intense" as const };
+  if (currentWeekMinutes >= 900) return { label: "Интенсивная неделя", tone: "intense" as const };
+  if (activeDaysLast7 >= 5) return { label: "Стабильный ритм", tone: "positive" as const };
+  if (currentWeekMinutes <= 90 && activeDaysLast7 <= 2) return { label: "Лёгкая неделя", tone: "neutral" as const };
+  if (isBuildingMomentum(currentWeek)) return { label: "Набираешь темп", tone: "positive" as const };
+
+  return { label: "Спокойный ритм", tone: "neutral" as const };
+}
+function isBuildingMomentum(days: DayStat[]) {
+  const lastThree = days.slice(-3).map((day) => Math.round(getCodingSeconds(day) / 60));
+
+  return lastThree.length === 3 && lastThree[0] > 0 && lastThree[0] <= lastThree[1] && lastThree[1] <= lastThree[2];
+}
+
+function sumCodingMinutes(days: DayStat[]) {
+  return days.reduce((sum, day) => sum + Math.round(getCodingSeconds(day) / 60), 0);
 }
 
 function calculateLearningBalance({
@@ -713,13 +959,13 @@ function getLearningBalanceDescription(
   focusPercent: number,
 ) {
   if (status === "notStarted") return "Пока нет кодинг-активности. Можно начать с маленькой сессии на 15 минут.";
-  if (status === "recovery") return "После сильного дня короткая практика — нормальный и полезный ритм.";
+  if (status === "recovery") return "После сильного дня короткая практика - нормальный и полезный ритм.";
   if (status === "overloadRisk") return "Сегодня очень высокая нагрузка. Лучше завершить день мягко и восстановиться.";
   if (codingMinutes <= 60) return "День начат. Небольшая практика помогает сохранить ритм.";
   if (codingMinutes <= 120) return "Хорошая учебная сессия: достаточно практики для реального прогресса.";
   if (codingMinutes <= 240) {
     return mainLanguage && focusPercent >= 70
-      ? `Сильный день: основной фокус сегодня — ${mainLanguage}.`
+      ? `Сильный день: основной фокус сегодня - ${mainLanguage}.`
       : "Сильный день: объём уже заметный, прогресс хорошо закрепляется.";
   }
 
@@ -741,7 +987,7 @@ function getLearningBalanceNextAction({
 }) {
   if (status === "notStarted") return "Следующий шаг: короткая 15-минутная сессия или спокойный отдых.";
   if (status === "overloadRisk") return "Следующий шаг: остановиться мягко, сделать перерыв и восстановиться.";
-  if (closeToRecord) return "Следующий шаг: ты близко к личному рекорду дня — можно добрать несколько минут без рывка.";
+  if (closeToRecord) return "Следующий шаг: ты близко к личному рекорду дня - можно добрать несколько минут без рывка.";
   if (codingMinutes >= 240) return "Следующий шаг: запиши короткий итог дня и сделай паузу.";
   if (completedFocusSessions === 0 && codingMinutes >= 90) return "Следующий шаг: добавь структурированный перерыв, чтобы не смазать фокус.";
   if (openQuests > 0 && codingMinutes >= 30) return "Следующий шаг: можно закрыть один открытый daily quest.";
@@ -855,6 +1101,22 @@ function mondayFirstDayIndex(dateKey: string) {
   const day = new Date(`${dateKey}T00:00:00`).getDay();
 
   return day === 0 ? 6 : day - 1;
+}
+
+function formatMinutes(minutes: number) {
+  const safeMinutes = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(safeMinutes / 60);
+  const restMinutes = safeMinutes % 60;
+
+  if (hours <= 0) {
+    return `${restMinutes} мин`;
+  }
+
+  return `${hours} ч ${restMinutes} мин`;
+}
+
+function formatTrendSeconds(seconds: number) {
+  return formatMinutes(Math.round(Math.max(0, seconds) / 60));
 }
 
 function formatDuration(seconds: number) {
