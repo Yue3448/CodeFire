@@ -15,7 +15,7 @@ type TimelinePayload = {
 const filters = ["all", "rank", "achievement", "item", "boss", "season", "note", "stepik", "pomodoro"] as const;
 
 export function TimelinePage() {
-  const state = useRemoteData<TimelinePayload>("/api/timeline?limit=200&refresh=1");
+  const state = useRemoteData<TimelinePayload>("/api/timeline?limit=120");
   const [filter, setFilter] = useState<(typeof filters)[number]>("all");
   const sourceEvents = useMemo(() => (state.status === "ready" ? state.data.timeline : []), [state]);
   const events = useMemo(

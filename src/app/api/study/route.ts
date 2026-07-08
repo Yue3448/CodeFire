@@ -70,12 +70,10 @@ async function getLocalStudyPayload(todayDate: string) {
 }
 
 export async function GET() {
-  console.log("[study] GET start");
   const apiKey = process.env.WAKATIME_API_KEY;
   const todayDate = new Date().toISOString().slice(0, 10);
 
   if (!apiKey) {
-    console.log("[study] GET local no-api-key");
     return NextResponse.json({
       configured: true,
       generatedAt: new Date().toISOString(),
@@ -105,7 +103,6 @@ export async function GET() {
       todayDate: data.today.date,
     });
 
-    console.log("[study] GET success");
     return NextResponse.json(
       {
         configured: true,

@@ -24,10 +24,8 @@ function validationError(payload: Record<string, unknown>) {
 }
 
 export async function GET() {
-  console.log("[study-tasks] GET start");
   try {
     const tasks = await getStudyTasks(500);
-    console.log("[study-tasks] GET success");
     return NextResponse.json({ tasks });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load study tasks.";
@@ -37,7 +35,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  console.log("[study-tasks] POST start");
   try {
     const payload = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const error = validationError(payload);
@@ -48,7 +45,6 @@ export async function POST(request: NextRequest) {
 
     const task = await saveStudyTask(payload);
 
-    console.log("[study-tasks] POST success");
     return NextResponse.json({ task, tasks: await getStudyTasks(500) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create study task.";
@@ -58,7 +54,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  console.log("[study-tasks] PATCH start");
   try {
     const payload = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const id = typeof payload.id === "string" ? payload.id : request.nextUrl.searchParams.get("id") ?? "";
@@ -75,7 +70,6 @@ export async function PATCH(request: NextRequest) {
 
     const task = await updateStudyTask(id, payload);
 
-    console.log("[study-tasks] PATCH success");
     return NextResponse.json({ task, tasks: await getStudyTasks(500) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update study task.";
@@ -85,7 +79,6 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  console.log("[study-tasks] DELETE start");
   try {
     const id = request.nextUrl.searchParams.get("id") ?? "";
 
@@ -95,7 +88,6 @@ export async function DELETE(request: NextRequest) {
 
     const result = await deleteStudyTask(id);
 
-    console.log("[study-tasks] DELETE success");
     return NextResponse.json({ ...result, tasks: await getStudyTasks(500) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete study task.";

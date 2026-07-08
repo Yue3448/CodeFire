@@ -43,7 +43,7 @@ type QuestOptions = {
 };
 
 function hasMainLanguage(mainLanguage: string) {
-  return mainLanguage.trim().length > 0 && mainLanguage !== "Нет кода" && mainLanguage !== "РќРµС‚ РєРѕРґР°";
+  return mainLanguage.trim().length > 0 && mainLanguage !== "Нет кода";
 }
 
 function buildContext(

@@ -33,7 +33,7 @@ async function getCached<T>(
   ttlMs: number,
   forceRefresh: boolean,
   load: () => Promise<T>,
-): Promise<{ data: T; cache: "HIT" | "MISS" | "REFRESH" }> {
+): Promise<{ data: T; cache: "HIT" | "MISS" | "REFRESH" | "STALE" }> {
   if (!forceRefresh && isFresh(entry) && entry.data && Date.now() - entry.cachedAt < ttlMs) {
     return { data: entry.data, cache: "HIT" };
   }
@@ -46,7 +46,19 @@ async function getCached<T>(
     entry.pending = null;
   });
 
-  const data = await entry.pending;
+  let data: T;
+
+  try {
+    data = await entry.pending;
+  } catch (error) {
+    if (entry.data) {
+      console.warn("[CodeFire] returning stale cache after load failure", error);
+      return { data: entry.data, cache: "STALE" };
+    }
+
+    throw error;
+  }
+
   return { data, cache: forceRefresh ? "REFRESH" : "MISS" };
 }
 

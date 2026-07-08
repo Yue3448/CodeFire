@@ -1,29 +1,48 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { jsonError, jsonResponse } from "@/lib/api-response";
 import { deleteUserGoal, getUserGoals, saveUserGoal, toggleGoal } from "@/lib/custom-goals";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json({ goals: await getUserGoals() });
+  try {
+    return jsonResponse({ goals: await getUserGoals() });
+  } catch (error) {
+    console.error("[goals] GET error", error);
+    return jsonError(error, "Failed to load goals.", {
+      status: 500,
+      extra: { goals: [] },
+    });
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const payload = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const action = typeof payload.action === "string" ? payload.action : "";
+  try {
+    const payload = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const action = typeof payload.action === "string" ? payload.action : "";
 
-  if (action === "toggle" && typeof payload.id === "string") {
-    await toggleGoal(payload.id);
-    return NextResponse.json({ goals: await getUserGoals() });
+    if (action === "toggle" && typeof payload.id === "string") {
+      await toggleGoal(payload.id);
+      return jsonResponse({ goals: await getUserGoals() });
+    }
+
+    const goal = await saveUserGoal(payload);
+
+    return jsonResponse({ goal, goals: await getUserGoals() });
+  } catch (error) {
+    console.error("[goals] POST error", error);
+    return jsonError(error, "Failed to update goals.", { status: 500 });
   }
-
-  const goal = await saveUserGoal(payload);
-
-  return NextResponse.json({ goal, goals: await getUserGoals() });
 }
 
 export async function DELETE(request: NextRequest) {
-  const id = request.nextUrl.searchParams.get("id") ?? "";
+  try {
+    const id = request.nextUrl.searchParams.get("id") ?? "";
 
-  return NextResponse.json(await deleteUserGoal(id));
+    return jsonResponse(await deleteUserGoal(id));
+  } catch (error) {
+    console.error("[goals] DELETE error", error);
+    return jsonError(error, "Failed to delete goal.", { status: 500 });
+  }
 }

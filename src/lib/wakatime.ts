@@ -31,6 +31,8 @@ import {
 } from "@/lib/weekly-report";
 
 const WAKATIME_API_BASE = "https://wakatime.com/api/v1";
+const WAKATIME_REQUEST_TIMEOUT_MS = 12_000;
+const WAKATIME_SUMMARY_CONCURRENCY = 3;
 
 async function timed<T>(label: string, run: () => Promise<T>): Promise<T> {
   console.time(label);
@@ -84,13 +86,29 @@ function getAuthHeader(apiKey: string) {
 }
 
 async function fetchWakaTime<T>(path: string, apiKey: string): Promise<T> {
-  const response = await fetch(`${WAKATIME_API_BASE}${path}`, {
-    headers: {
-      Authorization: getAuthHeader(apiKey),
-      "User-Agent": "CodeFire local dashboard",
-    },
-    cache: "no-store",
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), WAKATIME_REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+
+  try {
+    response = await fetch(`${WAKATIME_API_BASE}${path}`, {
+      headers: {
+        Authorization: getAuthHeader(apiKey),
+        "User-Agent": "CodeFire local dashboard",
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`WakaTime API timed out after ${WAKATIME_REQUEST_TIMEOUT_MS}ms.`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const details = await response.text().catch(() => "");
@@ -102,6 +120,28 @@ async function fetchWakaTime<T>(path: string, apiKey: string): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  run: (item: T) => Promise<R>,
+) {
+  const results: R[] = [];
+  let cursor = 0;
+  const workerCount = Math.min(limit, items.length);
+
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (cursor < items.length) {
+        const index = cursor;
+        cursor += 1;
+        results[index] = await run(items[index]);
+      }
+    }),
+  );
+
+  return results;
 }
 
 async function fetchWakaTimeSummaries(startDate: string, endDate: string, apiKey: string) {
@@ -119,13 +159,11 @@ async function fetchWakaTimeSummaries(startDate: string, endDate: string, apiKey
     cursor = addDays(chunkEndDate, 1);
   }
 
-  const responses = await Promise.all(
-    ranges.map(({ chunkStart, chunkEnd }) =>
+  const responses = await mapWithConcurrency(ranges, WAKATIME_SUMMARY_CONCURRENCY, ({ chunkStart, chunkEnd }) =>
       fetchWakaTime<WakaTimeSummariesResponse>(
         `/users/current/summaries?start=${chunkStart}&end=${chunkEnd}`,
         apiKey,
       ),
-    ),
   );
 
   return {

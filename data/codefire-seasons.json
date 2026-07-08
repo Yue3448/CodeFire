@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "seasons": [
+    {
+      "id": "season-1-python-foundation",
+      "title": "Season 1: Python Foundation",
+      "description": "A local CodeFire learning season for Python, rhythm, and study tasks.",
+      "startDate": "2026-07-01",
+      "endDate": "2026-08-25",
+      "active": true,
+      "createdAt": "2026-07-08T08:58:49.041Z",
+      "goals": [
+        {
+          "id": "coding-3000",
+          "title": "3000 real Coding XP",
+          "type": "codingXp",
+          "target": 3000,
+          "progress": 0,
+          "completed": false
+        },
+        {
+          "id": "python-1200",
+          "title": "1200 Python XP",
+          "type": "languageXp",
+          "target": 1200,
+          "progress": 0,
+          "language": "Python",
+          "completed": false
+        },
+        {
+          "id": "tasks-30",
+          "title": "30 study tasks",
+          "type": "tasks",
+          "target": 30,
+          "progress": 0,
+          "completed": false
+        },
+        {
+          "id": "active-24",
+          "title": "24 active coding days",
+          "type": "activeDays",
+          "target": 24,
+          "progress": 0,
+          "completed": false
+        },
+        {
+          "id": "pomodoro-20",
+          "title": "20 Pomodoro focus sessions",
+          "type": "pomodoro",
+          "target": 20,
+          "progress": 0,
+          "completed": false
+        },
+        {
+          "id": "topic-dicts-500",
+          "title": "500 topic XP: Dictionaries",
+          "type": "topicXp",
+          "target": 500,
+          "progress": 0,
+          "topic": "Dictionaries",
+          "completed": false
+        }
+      ],
+      "rewards": [
+        {
+          "id": "season-title-spark",
+          "level": 1,
+          "title": "Season Spark",
+          "type": "title",
+          "unlocked": false
+        },
+        {
+          "id": "season-frame-profile",
+          "level": 3,
+          "title": "Profile Frame",
+          "type": "cosmetic",
+          "unlocked": false
+        },
+        {
+          "id": "season-item-python-core",
+          "level": 5,
+          "title": "Python Charm",
+          "type": "item",
+          "unlocked": false,
+          "itemId": "python-core"
+        },
+        {
+          "id": "season-theme-python-green",
+          "level": 10,
+          "title": "Python Green Theme",
+          "type": "theme",
+          "unlocked": false,
+          "themeId": "python-green"
+        },
+        {
+          "id": "season-badge-foundation",
+          "level": 15,
+          "title": "Foundation Medal",
+          "type": "badge",
+          "unlocked": false
+        },
+        {
+          "id": "season-title-clear",
+          "level": 20,
+          "title": "Foundation Clear",
+          "type": "title",
+          "unlocked": false
+        }
+      ]
+    }
+  ]
+}

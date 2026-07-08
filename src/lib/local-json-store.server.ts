@@ -15,6 +15,7 @@ export async function readJsonStore<T>(fileName: string, fallback: T): Promise<T
     return JSON.parse(raw) as T;
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      await writeJsonStore(fileName, fallback);
       return fallback;
     }
 

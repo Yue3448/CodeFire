@@ -26,12 +26,14 @@ export type CodeFireHistoryResult = {
 const historyFile = path.join(process.cwd(), "data", "codefire-history.json");
 
 async function readHistory(): Promise<CodeFireHistory> {
+  const fallback: CodeFireHistory = { version: 3, schema: "coding-v3-current-day-snapshots", days: {} };
+
   try {
     const raw = await readFile(historyFile, "utf8");
     const parsed = JSON.parse(raw) as Partial<CodeFireHistory>;
 
     if (parsed.version !== 3 || parsed.schema !== "coding-v3-current-day-snapshots") {
-      return { version: 3, schema: "coding-v3-current-day-snapshots", days: {} };
+      return fallback;
     }
 
     return {
@@ -41,7 +43,8 @@ async function readHistory(): Promise<CodeFireHistory> {
     };
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      return { version: 3, schema: "coding-v3-current-day-snapshots", days: {} };
+      await writeHistory(fallback);
+      return fallback;
     }
 
     throw error;

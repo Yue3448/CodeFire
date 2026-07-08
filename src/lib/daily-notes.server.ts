@@ -63,6 +63,8 @@ function sanitizeNote(input: Partial<DailyNote>, fallbackDate = new Date().toISO
 }
 
 async function readNotesFile(): Promise<NotesFile> {
+  const fallback: NotesFile = { version: 3, notes: {} };
+
   try {
     const raw = await readFile(notesFile, "utf8");
     const parsed = JSON.parse(raw) as Partial<NotesFile>;
@@ -74,7 +76,8 @@ async function readNotesFile(): Promise<NotesFile> {
     return { version: 3, notes };
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      return { version: 3, notes: {} };
+      await writeNotesFile(fallback);
+      return fallback;
     }
 
     throw error;

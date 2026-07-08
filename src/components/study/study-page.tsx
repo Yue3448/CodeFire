@@ -427,15 +427,33 @@ export function StudyPage() {
   const loadedData = state.status === "ready" ? state.data : null;
   const data = loadedData ? localData ?? hydrateStudyData(loadedData) : null;
   const tasks = data?.studyTasks?.items ?? emptyStudyTasks;
-  const taskProgress = progressMap(data?.taskProgress ?? []);
+  const taskProgress = useMemo(() => progressMap(data?.taskProgress ?? []), [data?.taskProgress]);
   const visibleTasks = useMemo(() => tasks.filter((task) => task.status !== "archived"), [tasks]);
-  const activeTasks = visibleTasks.filter((task) => !(taskProgress.get(task.id)?.isCompleted || task.status === "completed"));
-  const completedTasks = visibleTasks.filter((task) => taskProgress.get(task.id)?.isCompleted || task.status === "completed");
-  const completedToday = completedTasks.filter((task) => (task.completedAt?.slice(0, 10) ?? task.date) === data?.todayDate).length;
+  const { activeTasks, completedTasks, completedToday } = useMemo(() => {
+    const active: StudyTask[] = [];
+    const completed: StudyTask[] = [];
+
+    for (const task of visibleTasks) {
+      if (taskProgress.get(task.id)?.isCompleted || task.status === "completed") {
+        completed.push(task);
+      } else {
+        active.push(task);
+      }
+    }
+
+    return {
+      activeTasks: active,
+      completedTasks: completed,
+      completedToday: completed.filter((task) => (task.completedAt?.slice(0, 10) ?? task.date) === data?.todayDate).length,
+    };
+  }, [data?.todayDate, taskProgress, visibleTasks]);
   const stepikWeek = data?.stepik?.stats.weekTasks ?? 0;
   const manualWeek = data?.manualStudy?.stats.weekMinutes ?? 0;
-  const topTopic = data?.topics.find((topic) => topic.xp > 0) ?? data?.topics[0] ?? null;
-  const weekTaskProgress = visibleTasks.length ? Math.round((completedTasks.length / visibleTasks.length) * 100) : 0;
+  const topTopic = useMemo(() => data?.topics.find((topic) => topic.xp > 0) ?? data?.topics[0] ?? null, [data?.topics]);
+  const weekTaskProgress = useMemo(
+    () => (visibleTasks.length ? Math.round((completedTasks.length / visibleTasks.length) * 100) : 0),
+    [completedTasks.length, visibleTasks.length],
+  );
   const linkedTaskCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const task of visibleTasks) {

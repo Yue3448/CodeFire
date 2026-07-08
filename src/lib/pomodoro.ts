@@ -123,6 +123,7 @@ async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
     return JSON.parse(raw) as T;
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      await writeJsonFile(filePath, fallback);
       return fallback;
     }
 

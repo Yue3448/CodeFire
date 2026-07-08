@@ -20,10 +20,11 @@ export function useRemoteData<T>(url: string): RemoteState<T> {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => {
       controller.abort();
-    }, 25_000);
+    }, 18_000);
 
     async function load() {
-      console.log(`[CodeFire] loading ${url}`);
+      setState({ status: "loading" });
+
       try {
         const response = await fetch(url, { cache: "no-store", signal: controller.signal });
         const payload = (await response.json().catch(() => ({}))) as T & { error?: string; configured?: boolean; message?: string };
@@ -38,7 +39,6 @@ export function useRemoteData<T>(url: string): RemoteState<T> {
           return;
         }
 
-        console.log(`[CodeFire] loaded ${url}`);
         setState({ status: "ready", data: payload });
       } catch (error) {
         if (!mounted) return;
