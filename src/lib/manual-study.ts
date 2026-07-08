@@ -6,15 +6,17 @@ import {
   normalizeText,
   readJsonStore,
   writeJsonStore,
-} from "@/lib/local-json-store";
+} from "@/lib/local-json-store.server";
 
 export type ManualStudyEntry = {
   id: string;
   date: string;
   minutes: number;
   type: "theory" | "paper" | "video" | "reading" | "debugThinking" | "other";
+  language?: string;
   topic?: string;
   description?: string;
+  difficulty?: 1 | 2 | 3 | 4 | 5;
   createdAt: string;
 };
 
@@ -48,6 +50,7 @@ function sanitizeType(value: unknown): ManualStudyEntry["type"] {
 
 function sanitizeEntry(input: Partial<ManualStudyEntry>): ManualStudyEntry {
   const date = isDateKey(input.date) ? input.date : getLocalDateKey();
+  const language = normalizeText(input.language, 40);
   const topic = normalizeText(input.topic, 64);
   const description = normalizeText(input.description, 700);
 
@@ -56,8 +59,10 @@ function sanitizeEntry(input: Partial<ManualStudyEntry>): ManualStudyEntry {
     date,
     minutes: clampNumber(input.minutes, 1, 600, 30),
     type: sanitizeType(input.type),
+    language: language || undefined,
     topic: topic || undefined,
     description: description || undefined,
+    difficulty: input.difficulty ? (clampNumber(input.difficulty, 1, 5, 2) as ManualStudyEntry["difficulty"]) : undefined,
     createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
   };
 }

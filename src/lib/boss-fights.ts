@@ -5,7 +5,7 @@ import {
   normalizeText,
   readJsonStore,
   writeJsonStore,
-} from "@/lib/local-json-store";
+} from "@/lib/local-json-store.server";
 import type { DailyNote } from "@/lib/daily-notes";
 import type { PomodoroStats } from "@/lib/pomodoro";
 import type { StepikEntry } from "@/lib/stepik";

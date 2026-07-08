@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "6149d936-8fb7-44d5-844a-841eb665c5c9",
+      "date": "2026-07-08",
+      "source": "wakatime",
+      "topic": "Dictionaries",
+      "title": "90 min Python",
+      "language": "Python",
+      "type": "codingTime",
+      "target": 90,
+      "unit": "minutes",
+      "period": "today",
+      "difficulty": 2,
+      "difficultyLabel": "normal",
+      "status": "active",
+      "createdAt": "2026-07-08T08:33:57.931Z"
+    }
+  ]
+}

@@ -30,6 +30,45 @@
       "sourceId": "novice-frame"
     },
     {
+      "id": "achievement:first-pomodoro",
+      "date": "2026-07-08",
+      "type": "achievement",
+      "title": "Первый Pomodoro",
+      "description": "Завершить первую focus-сессию.",
+      "icon": "PO",
+      "rarity": "common",
+      "sourceId": "first-pomodoro"
+    },
+    {
+      "id": "achievement:pomodoro-total-1",
+      "date": "2026-07-08",
+      "type": "achievement",
+      "title": "1 Pomodoro",
+      "description": "Завершить 1 focus-сессий.",
+      "icon": "PO",
+      "rarity": "common",
+      "sourceId": "pomodoro-total-1"
+    },
+    {
+      "id": "item:small-focus-crystal",
+      "date": "2026-07-08",
+      "type": "item",
+      "title": "Малый фокус-кристалл",
+      "description": "+4% Adventure XP за Pomodoro quests.",
+      "icon": "FC",
+      "rarity": "common",
+      "sourceId": "small-focus-crystal"
+    },
+    {
+      "id": "pomodoro-best",
+      "date": "2026-07-08",
+      "type": "pomodoro",
+      "title": "Лучший Pomodoro-день",
+      "description": "1 сессий",
+      "icon": "⏱",
+      "rarity": "rare"
+    },
+    {
       "id": "achievement:streak-recovered",
       "date": "2026-07-07",
       "type": "achievement",
@@ -226,6 +265,16 @@
       "icon": "TS",
       "rarity": "rare",
       "sourceId": "typescript-xp-300"
+    },
+    {
+      "id": "item:calm-bell",
+      "date": "2026-07-07",
+      "type": "item",
+      "title": "Колокол ритма",
+      "description": "Мягкий signal для focus rhythm.",
+      "icon": "CB",
+      "rarity": "common",
+      "sourceId": "calm-bell"
     },
     {
       "id": "daily-120",
@@ -714,5 +763,5 @@
       "sourceId": "special-peak-focus"
     }
   ],
-  "updatedAt": "2026-07-07T22:01:57.974Z"
+  "updatedAt": "2026-07-08T08:33:18.288Z"
 }

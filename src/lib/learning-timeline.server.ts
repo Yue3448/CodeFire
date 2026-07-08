@@ -1,5 +1,5 @@
 import "server-only";
-import { readJsonStore, writeJsonStore } from "@/lib/local-json-store";
+import { readJsonStore, writeJsonStore } from "@/lib/local-json-store.server";
 import {
   dedupeTimelineEvents,
   getTimelineEvents,

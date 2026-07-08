@@ -1,4 +1,4 @@
-import { clampNumber, normalizeText, readJsonStore, writeJsonStore } from "@/lib/local-json-store";
+import { clampNumber, normalizeText, readJsonStore, writeJsonStore } from "@/lib/local-json-store.server";
 import type { DailyNote } from "@/lib/daily-notes";
 import type { ManualStudyEntry } from "@/lib/manual-study";
 import type { StepikEntry } from "@/lib/stepik";
@@ -117,10 +117,19 @@ export async function getTopicTracker({
 
   for (const task of tasks) {
     const topic = ensureTopic(task.topic);
-    const solvedMultiplier = task.status === "solved" ? 30 : task.status === "almost" ? 18 : task.status === "reviewed" ? 12 : 5;
+    const solvedMultiplier =
+      task.status === "solved" || task.status === "completed"
+        ? 30
+        : task.status === "almost"
+          ? 18
+          : task.status === "reviewed"
+            ? 12
+            : task.status === "failed"
+              ? 5
+              : 0;
 
     topic.xp += solvedMultiplier * task.difficulty;
-    topic.solvedTasks += task.status === "solved" ? 1 : 0;
+    topic.solvedTasks += task.status === "solved" || task.status === "completed" ? 1 : 0;
     topic.lastPracticedAt = topic.lastPracticedAt && topic.lastPracticedAt > task.date ? topic.lastPracticedAt : task.date;
   }
 

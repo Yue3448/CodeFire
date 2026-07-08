@@ -6,11 +6,13 @@ import {
   normalizeText,
   readJsonStore,
   writeJsonStore,
-} from "@/lib/local-json-store";
+} from "@/lib/local-json-store.server";
 
 export type StepikEntry = {
   id: string;
   date: string;
+  course?: string;
+  section?: string;
   topic: string;
   tasksSolved: number;
   difficulty: 1 | 2 | 3 | 4 | 5;
@@ -42,12 +44,16 @@ function sanitizeStatus(value: unknown): StepikEntry["status"] {
 
 function sanitizeEntry(input: Partial<StepikEntry>): StepikEntry {
   const date = isDateKey(input.date) ? input.date : getLocalDateKey();
+  const course = normalizeText(input.course, 100);
+  const section = normalizeText(input.section, 100);
   const topic = normalizeText(input.topic, 64) || "Algorithms";
   const comment = normalizeText(input.comment, 700);
 
   return {
     id: normalizeText(input.id, 80) || randomUUID(),
     date,
+    course: course || undefined,
+    section: section || undefined,
     topic,
     tasksSolved: clampNumber(input.tasksSolved, 0, 200, 1),
     difficulty: clampNumber(input.difficulty, 1, 5, 2) as StepikEntry["difficulty"],

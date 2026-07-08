@@ -1,24 +1,42 @@
-import { randomUUID } from "node:crypto";
-import {
-  clampNumber,
-  getLocalDateKey,
-  isDateKey,
-  normalizeText,
-  readJsonStore,
-  writeJsonStore,
-} from "@/lib/local-json-store";
+import { getLocalDateKey } from "@/lib/local-json-store";
+
+export type StudyTaskType = "codingTime" | "codingXp" | "tasksCount" | "stepikTasks" | "manualStudy" | "topicXp";
+export type StudyTaskUnit = "minutes" | "xp" | "tasks" | "sessions";
+export type StudyTaskPeriod = "today" | "week" | "custom" | "none";
+export type StudyTaskDifficulty = "easy" | "normal" | "hard" | "veryHard";
+export type StudyTaskSource =
+  | "wakatime"
+  | "stepik"
+  | "manual"
+  | "mixed"
+  | "Stepik"
+  | "Codeforces"
+  | "Book"
+  | "Custom";
+export type StudyTaskStatus = "active" | "completed" | "paused" | "archived" | "solved" | "almost" | "failed" | "reviewed";
 
 export type StudyTask = {
   id: string;
   date: string;
-  source: "Stepik" | "Codeforces" | "Book" | "Custom";
+  source: StudyTaskSource;
   topic: string;
   title?: string;
+  description?: string;
+  language?: string;
+  customTopic?: string;
+  type: StudyTaskType;
+  target: number;
+  unit: StudyTaskUnit;
+  period: StudyTaskPeriod;
+  deadline?: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  status: "solved" | "almost" | "failed" | "reviewed";
+  difficultyLabel: StudyTaskDifficulty;
+  status: StudyTaskStatus;
+  manualProgress?: number;
   notes?: string;
   createdAt: string;
   updatedAt?: string;
+  completedAt?: string;
 };
 
 export type StudyTaskStats = {
@@ -28,6 +46,10 @@ export type StudyTaskStats = {
   todayTasks: number;
   weekTasks: number;
   monthTasks: number;
+  active: number;
+  completed: number;
+  paused: number;
+  archived: number;
   averageDifficulty: number;
   topTopic?: string;
   solved: number;
@@ -37,31 +59,6 @@ export type StudyTaskStats = {
   studyXp: number;
   adventureXp: number;
 };
-
-type StudyTasksFile = {
-  version: 1;
-  tasks: StudyTask[];
-};
-
-const fileName = "codefire-study-tasks.json";
-const sources = new Set<StudyTask["source"]>(["Stepik", "Codeforces", "Book", "Custom"]);
-const statuses = new Set<StudyTask["status"]>(["solved", "almost", "failed", "reviewed"]);
-
-function sanitizeSource(value: unknown): StudyTask["source"] {
-  return typeof value === "string" && sources.has(value as StudyTask["source"])
-    ? (value as StudyTask["source"])
-    : "Custom";
-}
-
-function sanitizeStatus(value: unknown): StudyTask["status"] {
-  return typeof value === "string" && statuses.has(value as StudyTask["status"])
-    ? (value as StudyTask["status"])
-    : "solved";
-}
-
-function sanitizeDifficulty(value: unknown): StudyTask["difficulty"] {
-  return clampNumber(value, 1, 5, 2) as StudyTask["difficulty"];
-}
 
 function dateKeyToUtcMs(dateKey: string) {
   const [year = 0, month = 1, day = 1] = dateKey.split("-").map(Number);
@@ -79,7 +76,16 @@ function weekStart(dateKey: string) {
   return addDays(dateKey, day === 0 ? -6 : 1 - day);
 }
 
+export function isLegacyStudyStatus(status: StudyTaskStatus) {
+  return status === "solved" || status === "almost" || status === "failed" || status === "reviewed";
+}
+
+export function isStudyTaskFinished(task: Pick<StudyTask, "status">) {
+  return task.status === "completed" || task.status === "solved" || task.status === "reviewed";
+}
+
 export function studyTaskStudyXp(task: Pick<StudyTask, "status">) {
+  if (task.status === "active" || task.status === "paused" || task.status === "archived") return 0;
   if (task.status === "failed") return 5;
   if (task.status === "reviewed") return 10;
   if (task.status === "almost") return 15;
@@ -90,136 +96,37 @@ export function studyTaskAdventureXp(task: Pick<StudyTask, "status">) {
   return studyTaskStudyXp(task);
 }
 
-function sanitizeTask(input: Partial<StudyTask>): StudyTask {
-  const date = isDateKey(input.date) ? input.date : getLocalDateKey();
-  const topic = normalizeText(input.topic, 64) || "Other";
-  const title = normalizeText(input.title, 120);
-  const notes = normalizeText(input.notes, 700);
-
-  return {
-    id: normalizeText(input.id, 80) || randomUUID(),
-    date,
-    source: sanitizeSource(input.source),
-    topic,
-    title: title || undefined,
-    difficulty: sanitizeDifficulty(input.difficulty),
-    status: sanitizeStatus(input.status),
-    notes: notes || undefined,
-    createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
-    updatedAt: typeof input.updatedAt === "string" && input.updatedAt ? input.updatedAt : undefined,
-  };
-}
-
-async function readStudyTasksFile(): Promise<StudyTasksFile> {
-  const data = await readJsonStore<Partial<StudyTasksFile>>(fileName, { version: 1, tasks: [] });
-
-  return {
-    version: 1,
-    tasks: Array.isArray(data.tasks) ? data.tasks.map(sanitizeTask) : [],
-  };
-}
-
-async function writeStudyTasksFile(tasks: StudyTask[]) {
-  await writeJsonStore<StudyTasksFile>(fileName, {
-    version: 1,
-    tasks: tasks.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
-  });
-}
-
-export async function getStudyTasks(limit = 200) {
-  const data = await readStudyTasksFile();
-
-  return data.tasks.slice(0, Math.max(1, Math.min(500, limit)));
-}
-
-export async function addStudyTask(input: Partial<StudyTask>) {
-  const data = await readStudyTasksFile();
-  const task = sanitizeTask({ ...input, id: undefined, createdAt: new Date().toISOString() });
-
-  await writeStudyTasksFile(data.tasks.concat(task));
-
-  return task;
-}
-
-export async function updateStudyTask(id: string, input: Partial<StudyTask>) {
-  const data = await readStudyTasksFile();
-  const current = data.tasks.find((task) => task.id === id);
-
-  if (!current) {
-    return addStudyTask({ ...input, id });
-  }
-
-  const task = sanitizeTask({
-    ...current,
-    ...input,
-    id: current.id,
-    createdAt: current.createdAt,
-    updatedAt: new Date().toISOString(),
-  });
-  const tasks = data.tasks.filter((item) => item.id !== task.id).concat(task);
-
-  await writeStudyTasksFile(tasks);
-
-  return task;
-}
-
-export async function saveStudyTask(input: Partial<StudyTask>) {
-  const id = normalizeText(input.id, 80);
-
-  return id ? updateStudyTask(id, input) : addStudyTask(input);
-}
-
-export async function deleteStudyTask(id: string) {
-  const data = await readStudyTasksFile();
-  const tasks = data.tasks.filter((task) => task.id !== id);
-
-  await writeStudyTasksFile(tasks);
-
-  return { deleted: tasks.length !== data.tasks.length };
-}
-
-export async function getStudyTasksByDate(date: string) {
-  const tasks = await getStudyTasks(500);
-
-  return tasks.filter((task) => task.date === date);
-}
-
-export async function getStudyTasksForPeriod(
-  period: "day" | "week" | "month",
-  todayDate = getLocalDateKey(),
-) {
-  const tasks = await getStudyTasks(500);
-  const start = period === "day" ? todayDate : period === "week" ? weekStart(todayDate) : `${todayDate.slice(0, 7)}-01`;
-
-  return tasks.filter((task) => task.date >= start && task.date <= todayDate);
-}
-
 export function calculateStudyTaskStats(tasks: StudyTask[], todayDate = getLocalDateKey()): StudyTaskStats {
   const monthStart = todayDate.slice(0, 7);
   const weekStartKey = weekStart(todayDate);
-  const todayTasks = tasks.filter((task) => task.date === todayDate);
-  const weekTasks = tasks.filter((task) => task.date >= weekStartKey && task.date <= todayDate);
-  const monthTasks = tasks.filter((task) => task.date.startsWith(monthStart));
-  const solved = tasks.filter((task) => task.status === "solved");
-  const topicCounts = tasks.reduce<Record<string, number>>((counts, task) => {
-    counts[task.topic] = (counts[task.topic] ?? 0) + 1;
+  const visibleTasks = tasks.filter((task) => task.status !== "archived");
+  const todayTasks = visibleTasks.filter((task) => task.date === todayDate);
+  const weekTasks = visibleTasks.filter((task) => task.date >= weekStartKey && task.date <= todayDate);
+  const monthTasks = visibleTasks.filter((task) => task.date.startsWith(monthStart));
+  const solved = tasks.filter((task) => task.status === "solved" || task.status === "completed");
+  const topicCounts = visibleTasks.reduce<Record<string, number>>((counts, task) => {
+    counts[task.customTopic || task.topic] = (counts[task.customTopic || task.topic] ?? 0) + 1;
     return counts;
   }, {});
   const topTopic = Object.entries(topicCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const studyXp = tasks.reduce((sum, task) => sum + studyTaskStudyXp(task), 0);
 
   return {
-    todaySolved: solved.filter((task) => task.date === todayDate).length,
-    weekSolved: solved.filter((task) => task.date >= weekStartKey && task.date <= todayDate).length,
-    monthSolved: solved.filter((task) => task.date.startsWith(monthStart)).length,
+    todaySolved: solved.filter((task) => task.date === todayDate || task.completedAt?.startsWith(todayDate)).length,
+    weekSolved: solved.filter((task) => (task.completedAt?.slice(0, 10) ?? task.date) >= weekStartKey && (task.completedAt?.slice(0, 10) ?? task.date) <= todayDate).length,
+    monthSolved: solved.filter((task) => (task.completedAt?.slice(0, 10) ?? task.date).startsWith(monthStart)).length,
     todayTasks: todayTasks.length,
     weekTasks: weekTasks.length,
     monthTasks: monthTasks.length,
-    averageDifficulty: tasks.length
-      ? Math.round((tasks.reduce((sum, task) => sum + task.difficulty, 0) / tasks.length) * 10) / 10
+    active: visibleTasks.filter((task) => task.status === "active").length,
+    completed: solved.length,
+    paused: visibleTasks.filter((task) => task.status === "paused").length,
+    archived: tasks.filter((task) => task.status === "archived").length,
+    averageDifficulty: visibleTasks.length
+      ? Math.round((visibleTasks.reduce((sum, task) => sum + task.difficulty, 0) / visibleTasks.length) * 10) / 10
       : 0,
     topTopic,
-    solved: solved.length,
+    solved: tasks.filter((task) => task.status === "solved").length,
     almost: tasks.filter((task) => task.status === "almost").length,
     failed: tasks.filter((task) => task.status === "failed").length,
     reviewed: tasks.filter((task) => task.status === "reviewed").length,

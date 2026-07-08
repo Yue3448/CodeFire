@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "sessions": [
+    {
+      "id": "4b6f3077-ab7e-42f0-89dc-c31be7aefe09",
+      "date": "2026-07-08",
+      "mode": "focus",
+      "plannedMinutes": 5,
+      "completedMinutes": 5,
+      "completed": true,
+      "interrupted": false,
+      "startedAt": "2026-07-07T21:55:42.613Z",
+      "endedAt": "2026-07-07T22:10:15.897Z"
+    },
+    {
+      "id": "7f4dec1f-4883-43dc-86e5-e0adde0e59df",
+      "date": "2026-07-08",
+      "mode": "shortBreak",
+      "plannedMinutes": 10,
+      "completedMinutes": 5,
+      "completed": false,
+      "interrupted": true,
+      "startedAt": "2026-07-07T22:10:23.661Z",
+      "endedAt": "2026-07-07T22:10:29.655Z"
+    }
+  ]
+}

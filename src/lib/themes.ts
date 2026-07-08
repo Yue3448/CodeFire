@@ -1,4 +1,4 @@
-import { normalizeText, readJsonStore, writeJsonStore } from "@/lib/local-json-store";
+import { normalizeText, readJsonStore, writeJsonStore } from "@/lib/local-json-store.server";
 
 export type CodeFireTheme = {
   id: string;

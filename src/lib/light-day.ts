@@ -5,7 +5,7 @@ import {
   normalizeText,
   readJsonStore,
   writeJsonStore,
-} from "@/lib/local-json-store";
+} from "@/lib/local-json-store.server";
 
 export type LightDay = {
   date: string;

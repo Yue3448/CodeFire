@@ -52,6 +52,14 @@
     "novice-frame": {
       "unlockedAt": "2026-07-08T00:00:00.000Z",
       "source": "streak"
+    },
+    "small-focus-crystal": {
+      "unlockedAt": "2026-07-08T00:00:00.000Z",
+      "source": "pomodoro"
+    },
+    "calm-bell": {
+      "unlockedAt": "2026-07-07T22:14:13.562Z",
+      "source": "pomodoro"
     }
   },
   "equipped": {

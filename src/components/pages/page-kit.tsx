@@ -17,29 +17,42 @@ export function useRemoteData<T>(url: string): RemoteState<T> {
 
   useEffect(() => {
     let mounted = true;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+    }, 25_000);
 
     async function load() {
+      console.log(`[CodeFire] loading ${url}`);
       try {
-        const response = await fetch(url, { cache: "no-store" });
-        const payload = (await response.json()) as T & { error?: string; configured?: boolean; message?: string };
+        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        const payload = (await response.json().catch(() => ({}))) as T & { error?: string; configured?: boolean; message?: string };
 
         if (!mounted) return;
         if (payload.configured === false) {
           setState({ status: "error", message: payload.message ?? "CodeFire is not configured." });
           return;
         }
-        if (payload.error) {
-          setState({ status: "error", message: payload.error });
+        if (!response.ok || payload.error) {
+          setState({ status: "error", message: payload.error ?? payload.message ?? `Request failed: ${response.status}` });
           return;
         }
 
+        console.log(`[CodeFire] loaded ${url}`);
         setState({ status: "ready", data: payload });
       } catch (error) {
         if (!mounted) return;
+        console.error(`[CodeFire] ${url} error`, error);
         setState({
           status: "error",
-          message: error instanceof Error ? error.message : "Failed to load CodeFire data.",
+          message: error instanceof DOMException && error.name === "AbortError"
+            ? `Request timed out: ${url}`
+            : error instanceof Error
+              ? error.message
+              : "Failed to load CodeFire data.",
         });
+      } finally {
+        window.clearTimeout(timeout);
       }
     }
 
@@ -47,6 +60,8 @@ export function useRemoteData<T>(url: string): RemoteState<T> {
 
     return () => {
       mounted = false;
+      window.clearTimeout(timeout);
+      controller.abort();
     };
   }, [url]);
 

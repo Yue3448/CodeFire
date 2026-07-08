@@ -336,7 +336,9 @@ export function getConditionProgress(
 
   if (condition.kind === "studyTasks") {
     const tasks = entriesForPeriod(context.studyTasks, context, condition.period).filter((task) => {
-      const statusMatch = condition.status ? task.status === condition.status : true;
+      const statusMatch = condition.status
+        ? task.status === condition.status
+        : task.status !== "active" && task.status !== "paused" && task.status !== "archived";
       const sourceMatch = condition.source ? task.source.toLowerCase() === condition.source.toLowerCase() : true;
       const topicMatch = topicMatches(task.topic, condition.topic);
       const difficultyMatch = condition.minDifficulty ? task.difficulty >= condition.minDifficulty : true;

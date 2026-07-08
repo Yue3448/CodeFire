@@ -1,6 +1,6 @@
 import { itemCatalog, type ItemEffect, type ItemRarity, type ItemType } from "@/content/items";
 import { getConditionProgress, type ConditionProgressContext } from "@/lib/condition-progress";
-import { normalizeText, readJsonStore, writeJsonStore } from "@/lib/local-json-store";
+import { normalizeText, readJsonStore, writeJsonStore } from "@/lib/local-json-store.server";
 
 export type { ItemEffect } from "@/content/items";
 
