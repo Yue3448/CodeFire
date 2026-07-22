@@ -60,6 +60,10 @@
     "calm-bell": {
       "unlockedAt": "2026-07-07T22:14:13.562Z",
       "source": "pomodoro"
+    },
+    "serpent-blade": {
+      "unlockedAt": "2026-07-21T15:37:49.614Z",
+      "source": "python"
     }
   },
   "equipped": {

@@ -3,11 +3,31 @@
   "events": [
     {
       "id": "current-rank",
-      "date": "2026-07-08",
+      "date": "2026-07-22",
       "type": "rank",
-      "title": "Текущий ранг: Подмастерье",
+      "title": "Текущий ранг: Железный кодер",
       "icon": "🏅",
       "rarity": "rare"
+    },
+    {
+      "id": "item:serpent-blade",
+      "date": "2026-07-21",
+      "type": "item",
+      "title": "Змеиный клинок",
+      "description": "Python weapon без влияния на Coding XP.",
+      "icon": "SB",
+      "rarity": "rare",
+      "sourceId": "serpent-blade"
+    },
+    {
+      "id": "achievement:coding-xp-total-1000",
+      "date": "2026-07-19",
+      "type": "achievement",
+      "title": "1000 Coding XP",
+      "description": "Accumulate 1000 WakaTime Coding XP.",
+      "icon": "XP",
+      "rarity": "rare",
+      "sourceId": "coding-xp-total-1000"
     },
     {
       "id": "achievement:streak-3",
@@ -763,5 +783,5 @@
       "sourceId": "special-peak-focus"
     }
   ],
-  "updatedAt": "2026-07-08T09:42:11.150Z"
+  "updatedAt": "2026-07-22T13:00:26.145Z"
 }

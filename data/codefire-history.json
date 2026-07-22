@@ -36,7 +36,7 @@
           "xp": 116
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     },
     "2026-06-14": {
       "date": "2026-06-14",
@@ -57,7 +57,7 @@
           "xp": 2
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     },
     "2026-06-24": {
       "date": "2026-06-24",
@@ -78,7 +78,7 @@
           "xp": 24
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     },
     "2026-07-01": {
       "date": "2026-07-01",
@@ -104,7 +104,7 @@
           "xp": 4
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     },
     "2026-07-03": {
       "date": "2026-07-03",
@@ -125,7 +125,7 @@
           "xp": 6
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     },
     "2026-07-07": {
       "date": "2026-07-07",
@@ -156,38 +156,168 @@
           "xp": 198
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     },
     "2026-07-08": {
       "date": "2026-07-08",
-      "xp": 84,
-      "totalSeconds": 5050,
-      "codingSeconds": 5050,
+      "xp": 98,
+      "totalSeconds": 5912,
+      "codingSeconds": 5912,
       "languages": [
         {
           "name": "TypeScript",
-          "seconds": 4344,
-          "xp": 72
+          "seconds": 4381,
+          "xp": 73
         },
         {
           "name": "Python",
-          "seconds": 706,
-          "xp": 11
+          "seconds": 1531,
+          "xp": 25
         }
       ],
       "projects": [
         {
           "name": "SkillForge",
-          "seconds": 4344,
-          "xp": 72
+          "seconds": 4826,
+          "xp": 80
         },
         {
           "name": "education",
-          "seconds": 706,
-          "xp": 11
+          "seconds": 1531,
+          "xp": 25
         }
       ],
-      "updatedAt": "2026-07-08T09:42:11.556Z"
+      "updatedAt": "2026-07-22T13:08:24.893Z"
+    },
+    "2026-07-09": {
+      "date": "2026-07-09",
+      "xp": 40,
+      "totalSeconds": 2415,
+      "codingSeconds": 2415,
+      "languages": [
+        {
+          "name": "Python",
+          "seconds": 2195,
+          "xp": 36
+        },
+        {
+          "name": "HTML",
+          "seconds": 220,
+          "xp": 3
+        }
+      ],
+      "projects": [
+        {
+          "name": "education",
+          "seconds": 2195,
+          "xp": 36
+        },
+        {
+          "name": "cl",
+          "seconds": 383,
+          "xp": 6
+        }
+      ],
+      "updatedAt": "2026-07-22T13:08:24.893Z"
+    },
+    "2026-07-19": {
+      "date": "2026-07-19",
+      "xp": 109,
+      "totalSeconds": 6587,
+      "codingSeconds": 6587,
+      "languages": [
+        {
+          "name": "Python",
+          "seconds": 6587,
+          "xp": 109
+        }
+      ],
+      "projects": [
+        {
+          "name": "learning",
+          "seconds": 6074,
+          "xp": 101
+        },
+        {
+          "name": "education",
+          "seconds": 527,
+          "xp": 8
+        }
+      ],
+      "updatedAt": "2026-07-22T13:08:24.893Z"
+    },
+    "2026-07-20": {
+      "date": "2026-07-20",
+      "xp": 161,
+      "totalSeconds": 9701,
+      "codingSeconds": 9701,
+      "languages": [
+        {
+          "name": "Python",
+          "seconds": 9701,
+          "xp": 161
+        }
+      ],
+      "projects": [
+        {
+          "name": "learning",
+          "seconds": 6498,
+          "xp": 108
+        },
+        {
+          "name": "education",
+          "seconds": 3203,
+          "xp": 53
+        }
+      ],
+      "updatedAt": "2026-07-22T13:08:24.893Z"
+    },
+    "2026-07-21": {
+      "date": "2026-07-21",
+      "xp": 136,
+      "totalSeconds": 8215,
+      "codingSeconds": 8215,
+      "languages": [
+        {
+          "name": "Python",
+          "seconds": 8215,
+          "xp": 136
+        }
+      ],
+      "projects": [
+        {
+          "name": "grind",
+          "seconds": 7491,
+          "xp": 124
+        },
+        {
+          "name": "education",
+          "seconds": 723,
+          "xp": 12
+        }
+      ],
+      "updatedAt": "2026-07-22T13:08:24.893Z"
+    },
+    "2026-07-22": {
+      "date": "2026-07-22",
+      "xp": 114,
+      "totalSeconds": 6863,
+      "codingSeconds": 6863,
+      "languages": [
+        {
+          "name": "Python",
+          "seconds": 6863,
+          "xp": 114
+        }
+      ],
+      "projects": [
+        {
+          "name": "learning",
+          "seconds": 6863,
+          "xp": 114
+        }
+      ],
+      "updatedAt": "2026-07-22T13:08:24.893Z"
     }
   }
 }
